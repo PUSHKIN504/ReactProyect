@@ -7,7 +7,8 @@ export const APP_PREFIX_PATH = '/app';
 export const AUTH_PREFIX_PATH = '/auth';
 export const REDIRECT_URL_KEY = 'redirect'
 export const AUTHENTICATED_ENTRY = `${APP_PREFIX_PATH}/axion`;
-export const UNAUTHENTICATED_ENTRY = '/app/axion'
+export const UNAUTHENTICATED_ENTRY = '/login-1'
+
 
 export const THEME_CONFIG = {
 	navCollapsed: false,
