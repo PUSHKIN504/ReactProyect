@@ -8,11 +8,9 @@ import axios from 'axios';
 
 const UserList = () => {
   const [users, setUsers] = useState(userData);
-  const [userProfileVisible, setUserProfileVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-
+ 
   const deleteRate = RateId => {
-    fetch(`https://api.themoviedb.org/3/movie/${RateId}/rating`, {
+    fetch(`https://api.themoviedb.org/3/tv/${RateId}/rating`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZmYwNGM4MzgzZGFiZGM5NTM5ZDE0ZWFjYWZkMTZiNyIsInN1YiI6IjY2NTU1NjFiMjc4NmEyMWIyM2JiOGEyNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fxGldvIYBvyD9ha7Mqz9Ct7CTEpih3zPnCwrIsATT6o`,
@@ -28,23 +26,15 @@ const UserList = () => {
     .then(data => {
       console.log("RESPUESTA: " + JSON.stringify(data, null, 2));
       setUsers(users.filter(item => item.id !== RateId));
-      message.success({ content: `Rating Eliminado Correctamente`, duration: 2 });
+      message.success({ content: `Rating Eliminado Correctamente`, duration: 5 });
     })
     .catch(error => {
       console.log("ERROR: " + error);
-      message.error({ content: `Error deleting Rating ${RateId}`, duration: 2 });
+      message.error({ content: `Error deleting Rating ${RateId}`, duration: 5 });
     });
   }
 
-  const showUserProfile = userInfo => {
-    setUserProfileVisible(true);
-    setSelectedUser(userInfo);
-  };
-  
-  const closeUserProfile = () => {
-    setUserProfileVisible(false);
-    setSelectedUser(null);
-  }
+ 
 
   const tableColumns = [
     {
