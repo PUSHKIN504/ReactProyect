@@ -13,14 +13,14 @@ export const DIR_RTL = 'rtl';
 export const CONTENT_MAX_WIDTH = 1400;
 export const CONTENT_HEIGHT_OFFSET = HEADER_HEIGHT + FOOTER_HEIGHT;
 export const HEADER_BG_DEFAULT_COLOR_LIGHT = '#ffffff';
-export const HEADER_BG_DEFAULT_COLOR_DARK = '#283142';
+export const HEADER_BG_DEFAULT_COLOR_DARK = '#FFFFFF';
 export const LAYOUT_CONTENT_GUTTER = 25;
 export const LAYOUT_CONTENT_GUTTER_SM = 15;
 export const SIDE_NAV_DARK_BG_COLOR = '#001529'
 
-export const BLUE_BASE= '#3e79f7';
+export const BLUE_BASE= '#26E80F';
 export const PURPLE_BASE= '#a461d8';
-export const CYAN_BASE= '#04d182';
+export const CYAN_BASE= '#1BFF00';
 export const GREEN_BASE= '#21B573';
 export const MAGENTA_BASE= '#eb2f96';
 export const PINK_BASE= '#eb2f96';
@@ -40,7 +40,7 @@ export const GRAY_LIGHT = '#72849a';
 export const GRAY_LIGHTER = '#ededed';
 export const GRAY_LIGHTEST = '#f7f7f8';
 
-export const BODY_BACKGROUND = '#fafafb';
+export const BODY_BACKGROUND = '#000000';
 
 export const FONT_SIZE_BASE = 14;
 
@@ -140,9 +140,9 @@ export const GRAY_SCALE = {
 export const DARK_MODE =  {
     TEXT_COLOR: '#b4bed2',
     HEADING_COLOR: '#d6d7dc',
-    BG_COLOR: '#283142',
+    BG_COLOR: '#010101',
     BORDER_BASE_COLOR: '#4d5b75',
     HOVER_BG_COLOR: '#364663',
-    ACTIVE_BG_COLOR: '#293956',
+    ACTIVE_BG_COLOR: '#1BFF00',
     DROP_DOWN_SHADOW: '0 3px 6px -4px rgb(0 0 0 / 12%), 0 6px 16px 0 rgb(0 0 0 / 58%), 0 9px 28px 8px rgb(0 0 0 / 15%)'
 }

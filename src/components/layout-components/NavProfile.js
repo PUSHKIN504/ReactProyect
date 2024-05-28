@@ -70,7 +70,7 @@ const items = [
 	
 	{
 		key: 'Sign Out',
-		label: <MenuItemSignOut label="Sign Out" />,
+		label: <MenuItemSignOut label="Salir" />,
 	}
 ]
 

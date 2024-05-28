@@ -9,6 +9,7 @@ import {
   StopOutlined,
   DotChartOutlined,
   MailOutlined,
+  DeleteOutlined,
   MessageOutlined,
   CalendarOutlined,
   BulbOutlined,
@@ -49,7 +50,7 @@ const appsNavTree = [{
       key: 'apps-axion',
       path: `${APP_PREFIX_PATH}/axion`,
       title: 'sidenav.apps.axion',
-      icon: MailOutlined,
+      icon: DeleteOutlined,
       breadcrumb: false,
       submenu: []
     },
@@ -57,7 +58,7 @@ const appsNavTree = [{
       key: 'apps-fetch',
       path: `${APP_PREFIX_PATH}/fetch`,
       title: 'sidenav.apps.fetch',
-      icon: MailOutlined,
+      icon: DeleteOutlined,
       breadcrumb: false,
       submenu: []
     },

@@ -33,11 +33,11 @@ const NavItem = styled('div')`
     &.ant-dropdown-open,
     &.ant-popover-open {
         > * {
-            color: ${props => isDark(props.mode) ? baseTheme.colorPrimary : GRAY_SCALE.WHITE};
+            color: ${props => isDark(props.mode) ? baseTheme.colorPrimary : GRAY_SCALE.DARK};
         }
 
         .profile-text {
-            color: ${props => isDark(props.mode) ? GRAY_SCALE.GRAY : GRAY_SCALE.WHITE};
+            color: ${props => isDark(props.mode) ? GRAY_SCALE.DARK : GRAY_SCALE.DARK};
         }
     }
 `
