@@ -45,15 +45,47 @@ export const publicRoutes = [
 ]
 
 export const protectedRoutes = [
-   
     {
-        key: 'apps.axion',
+        key: 'apps.tarea1',
+        path: `${APP_PREFIX_PATH}/components/data-display`,
+        component: React.lazy(() => import('views/app-views/components/data-display')),
+    },
+    {
+        key: 'apps.tarea1.axion',
         path: `${APP_PREFIX_PATH}/axion`,
         component: React.lazy(() => import('Eliminado/axion')),
     },
     {
-        key: 'apps.fetch',
+        key: 'apps.tarea1.fetch',
         path: `${APP_PREFIX_PATH}/fetch`,
         component: React.lazy(() => import('Eliminado/fetch')),
     },
+
+
+    {
+        key: 'apps.tarea2',
+        path: `${APP_PREFIX_PATH}/components/data-display`,
+        component: React.lazy(() => import('views/app-views/components/data-display')),
+    },
+    {
+        key: 'apps.tarea2.EstadoCivil',
+        path: `${APP_PREFIX_PATH}/EstadoCivil`,
+        component: React.lazy(() => import('Tarea2/EstadoCivil')),
+    },
+    {
+        key: 'apps.tarea2.FormasPagos',
+        path: `${APP_PREFIX_PATH}/EstadoCivil`,
+        component: React.lazy(() => import('Tarea2/EstadoCivil')),
+    },
+
+    {
+        key: 'components.data-display',
+        path: `${APP_PREFIX_PATH}/components/data-display`,
+        component: React.lazy(() => import('views/app-views/components/data-display')),
+    },
+    {
+        key: 'components.data-display.avatar',
+        path: `${APP_PREFIX_PATH}/components/data-display/avatar`,
+        component: React.lazy(() => import('views/app-views/components/data-display/avatar')),
+    }
 ]

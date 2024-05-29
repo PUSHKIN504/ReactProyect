@@ -1,4 +1,12 @@
 {
-	"sidenav.apps.axion": "Axion",
-	"sidenav.apps.fetch": "Fetch"
+	"sidenav.apps.tarea1": "Tarea 1",
+	"sidenav.apps.tarea1.axion": "Axion",
+	"sidenav.apps.tarea1.fetch": "Fetch",
+
+	"sidenav.apps.tarea2": "Tarea 2",
+	"sidenav.apps.tarea2.EstadoCivil": "Estados Civiles",
+	"sidenav.apps.tarea2.FormasPagos": "Formas Pagos",
+
+	"sidenav.components.dataDisplay": "Data Display",
+	"sidenav.components.dataDisplay.avatar": "Avatar"
 }

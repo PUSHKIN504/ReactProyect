@@ -143,6 +143,6 @@ export const DARK_MODE =  {
     BG_COLOR: '#010101',
     BORDER_BASE_COLOR: '#4d5b75',
     HOVER_BG_COLOR: '#364663',
-    ACTIVE_BG_COLOR: '#1BFF00',
+    ACTIVE_BG_COLOR: '#979797',
     DROP_DOWN_SHADOW: '0 3px 6px -4px rgb(0 0 0 / 12%), 0 6px 16px 0 rgb(0 0 0 / 58%), 0 9px 28px 8px rgb(0 0 0 / 15%)'
 }
