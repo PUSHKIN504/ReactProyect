@@ -18,12 +18,12 @@ const UserList = () => {
     })
     .then(response => {
       console.log("RESPUESTA: " + JSON.stringify(response.data, null, 2));
-      setUsers(users.filter(item => item.id !== userId));
-      message.success({ content: `Usuario Eliminado Correctamente`, duration: 2 });
+   setUsers(users.filter(item => item.id !== userId));
+      message.success({ content: `Usuario Eliminado Correctamente`, duration: 5 });
     })
     .catch(error => {
       console.log("ERROR: " + error);
-      message.error({ content: `Error deleting user ${userId}`, duration: 2 });
+      message.error({ content: `Error deleting user ${userId}`, duration: 5 });
     });
   }
 
