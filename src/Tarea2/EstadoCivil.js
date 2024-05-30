@@ -208,15 +208,15 @@ const Talla = () => {
 
   const auditColumns = [
     {
-      title: 'Usuario',
-      dataIndex: 'usuario',
-      key: 'usuario',
-      align: 'center',
-    },
-    {
       title: 'Acción',
       dataIndex: 'accion',
       key: 'accion',
+      align: 'center',
+    },
+    {
+      title: 'Usuario',
+      dataIndex: 'usuario',
+      key: 'usuario',
       align: 'center',
     },
     {
@@ -230,15 +230,15 @@ const Talla = () => {
   const auditData = [
     {
       key: '1',
-      usuario: currentTalla?.usuarioCreacionNombre,
       accion: 'Creado',
+      usuario: currentTalla?.usuarioCreacionNombre,
       fecha: currentTalla?.escv_FechaCreacion,
       align: 'center',
     },
     {
       key: '2',
-      usuario: currentTalla?.usuarioModificacionNombre,
       accion: 'Modificado',
+      usuario: currentTalla?.usuarioModificacionNombre,
       fecha: currentTalla?.escv_FechaModificacion,
       align: 'center',
     },
