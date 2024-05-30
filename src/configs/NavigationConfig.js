@@ -13,7 +13,9 @@ import {
   DeleteOutlined,
   CreditCardFilled,
   HeartFilled,
+  HddFilled,
   DeleteFilled,
+  SmileFilled,
   MessageOutlined,
   CalendarOutlined,
   BulbOutlined,
@@ -127,7 +129,36 @@ const appsNavTree = [{
           submenu: []
         },
       ]
+    },
+
+
+
+    {
+      key: 'apps-tarea3',
+      path: `${APP_PREFIX_PATH}/components/data-display`,
+      title: 'sidenav.apps.tarea3',
+      icon: BookFilled,
+      breadcrumb: true,
+      submenu: [
+        {
+          key: 'apss-tarea23-PersonaNatura',
+          path: `${APP_PREFIX_PATH}/EstadoCivil`,
+          title: 'sidenav.apps.tarea3.PersonaNatural',
+          icon: SmileFilled,
+          breadcrumb: true,
+          submenu: []
+        },
+        {
+          key: 'apss-tarea3-Duca',
+          path: `${APP_PREFIX_PATH}/FormaPago`,
+          title: 'sidenav.apps.tarea3.Duca',
+          icon: HddFilled,
+          breadcrumb: true,
+          submenu: []
+        },
+      ]
     }
+
   ]
 }]
 

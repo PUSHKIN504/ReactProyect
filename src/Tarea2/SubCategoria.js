@@ -1,13 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Spin, Alert, Input, Button, Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
+import { Table, Spin, Alert, Input, Button,Modal, Select ,Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
 import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
-import { DeleteOutlined } from '@ant-design/icons'; // Agregar importación aquí
+import { DeleteOutlined,DeleteFilled } from '@ant-design/icons'; // Agregar importación aquí
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
 import { get, insertar, editar, eliminar, getcat } from 'services/SubCategoriaService';
 
 const { Panel } = Collapse;
+const { Option } = Select;
 
+function onChange(value) {
+    console.log(`selected ${value}`);
+  }
+  
+  function onBlur() {
+    console.log('blur');
+  }
+  
+  function onFocus() {
+    console.log('focus');
+  }
+  
+  function onSearch(val) {
+    console.log('search:', val);
+  }
+  
+
+  
 const SubCategoria = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -17,6 +36,7 @@ const SubCategoria = () => {
   const [showTable, setShowTable] = useState(true);
   const [form] = Form.useForm();
   const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
+  const [getCategoria, setCategoria] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +56,25 @@ const SubCategoria = () => {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchCategoria = async () => {
+      try {
+        const Categorias = await getcat();
+        if (Array.isArray(Categorias)) {
+            setCategoria(Categorias);
+        } else {
+          throw new Error('Data format is incorrect');
+        }
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+
+    fetchCategoria();
   }, []);
 
   const handleSearch = (e) => {
@@ -101,21 +140,42 @@ const SubCategoria = () => {
     }
   };
 
-  const handleDelete = async (subc_Id) => {
-    try {
-      await eliminar(subc_Id);
-      notification.success({ message: 'Subcategoría eliminada correctamente' });
+  const handleDelete = async (talla) => {
+    Modal.confirm({
+      title: '¿Estás seguro de eliminar este registro?',
+      content: 'Esta acción no se puede deshacer',
+      okText: 'Eliminar', // Cambio del texto del botón de confirmación
+      cancelText: 'Cancelar', // Cambio del texto del botón de cancelar
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const date = new Date().toISOString();
+          const id = talla.subc_Id;
+          const deleteTalla = {
+            subc_Id: id,
+            subc_FechaEliminacion: date,
+              usua_UsuarioEliminacion: 1
+        };
 
-      const subCategorias = await get();
-      if (Array.isArray(subCategorias)) {
-        setData(subCategorias);
-        setFilteredData(subCategorias);
-      } else {
-        throw new Error('Data format is incorrect');
-      }
-    } catch (error) {
-      notification.error({ message: 'Error al eliminar la subcategoría', description: error.message });
-    }
+          const response = await eliminar(deleteTalla);
+
+          if (response.code === 200) {
+            notification.success({ message: 'Operacion realizada correctamente' });
+          } else {
+            notification.error({ message: 'No se puede eliminar este registro' });
+          }
+          const tallas = await get();
+          if (Array.isArray(tallas)) {
+            setData(tallas);
+            setFilteredData(tallas);
+          } else {
+            throw new Error('Data format is incorrect');
+          }
+        } catch (error) {
+          notification.error({ message: 'Operacion no realizada', description: error.message });
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -163,20 +223,15 @@ const SubCategoria = () => {
           >
             Detalles
           </Button>
-          <Popconfirm
-            title="¿Estás seguro de eliminar esta subcategoría?"
-            onConfirm={() => handleDelete(record.subc_Id)}
-            okText="Sí"
-            cancelText="No"
+      
+             <Button
+            icon={<DeleteFilled />}
+            onClick={() => handleDelete(record)}
+            danger
+            type='primary'
           >
-            <Button
-              icon={<DeleteOutlined />}
-              style={{ backgroundColor: 'red' }}
-              type='primary'
-            >
-              Eliminar
-            </Button>
-          </Popconfirm>
+            Eliminar
+          </Button>
         </Row>
       ),
     },
@@ -207,14 +262,14 @@ const SubCategoria = () => {
     {
       key: '1',
       accion: 'Creado',
-      usuario: currentSubCategoria?.usua_UsuarioCreacion,
+      usuario: currentSubCategoria?.usuarioCreacionNombre,
       fecha: currentSubCategoria?.subc_FechaCreacion,
       align: 'center',
     },
     {
       key: '2',
       accion: 'Modificado',
-      usuario: currentSubCategoria?.usua_UsuarioModificacion,
+      usuario: currentSubCategoria?.usuarioModificaNombre,
       fecha: currentSubCategoria?.subc_FechaModificacion,
       align: 'center',
     },
@@ -259,19 +314,28 @@ const SubCategoria = () => {
                     <Col span={12}>
                       <h5>Categoría: </h5>
                     </Col>
-                    <Col span={12}>
-                      <h5>Descripción: </h5>
-                    </Col>
+                    
                   </Row>
+                
                   <Row gutter={16}>
                     <Col span={12}>
                       <Descriptions.Item label="ID"> {currentSubCategoria.subc_Id}</Descriptions.Item>
                     </Col>
                     <Col span={12}>
-                      <Descriptions.Item label="Categoría">{currentSubCategoria.cate_Id}</Descriptions.Item>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.cate_Descripcion}</Descriptions.Item>
                     </Col>
+                  </Row>
+                  <Divider></Divider>
+                  <Row gutter={16}>
+                 
                     <Col span={12}>
-                      <Descriptions.Item label="Descripción">{currentSubCategoria.subc_Descripcion}</Descriptions.Item>
+                      <h5>Descripción: </h5>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                  <Col span={12}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.subc_Descripcion}</Descriptions.Item>
                     </Col>
                   </Row>
                 </Card>
@@ -286,8 +350,25 @@ const SubCategoria = () => {
               <Form form={form} layout="vertical" className="ant-advanced-search-form">
                 <Row gutter={24}>
                   <Col span={12}>
-                    <Form.Item name="cate_Id" label="Categoría ID" rules={[{ required: true, message: 'Por favor, ingrese el ID de la categoría' }]}>
-                      <Input />
+                    <Form.Item name="cate_Id" label="Categoría" rules={[{ required: true, message: 'Por favor, ingrese el ID de la categoría' }]}>
+                    <Select
+                            showSearch
+                            placeholder="Seleccione"
+                            optionFilterProp="children"
+                            onChange={onChange}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                            onSearch={onSearch}
+                            filterOption={(input, option) =>
+                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                            }
+                        >
+                            {getCategoria.map((categoria) => (
+                            <Option key={categoria.cate_Id} value={categoria.cate_Id}>
+                                {categoria.cate_Descripcion}
+                            </Option>
+                            ))}
+                        </Select>
                     </Form.Item>
                   </Col>
                   <Col span={12}>
