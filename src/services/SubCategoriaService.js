@@ -55,9 +55,9 @@ export const editar = async (subcategoria) => {
   }
 };
 
-export const eliminar = async (id) => {
+export const eliminar = async (talla) => {
   try {
-    const response = await axiosInstance.post(`${API_URL}/Eliminar`, { subc_Id: id }, {
+    const response = await axiosInstance.post(`${API_URL}/Eliminar`, talla, {
       headers: {
         'Content-Type': 'application/json',
       }

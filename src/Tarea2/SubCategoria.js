@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Spin, Alert, Input, Button, Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
+import { Table, Spin, Alert, Input, Button,Modal, Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
 import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
-import { DeleteOutlined } from '@ant-design/icons'; // Agregar importación aquí
+import { DeleteOutlined,DeleteFilled } from '@ant-design/icons'; // Agregar importación aquí
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
 import { get, insertar, editar, eliminar, getcat } from 'services/SubCategoriaService';
@@ -101,21 +101,42 @@ const SubCategoria = () => {
     }
   };
 
-  const handleDelete = async (subc_Id) => {
-    try {
-      await eliminar(subc_Id);
-      notification.success({ message: 'Subcategoría eliminada correctamente' });
+  const handleDelete = async (talla) => {
+    Modal.confirm({
+      title: '¿Estás seguro de eliminar este registro?',
+      content: 'Esta acción no se puede deshacer',
+      okText: 'Eliminar', // Cambio del texto del botón de confirmación
+      cancelText: 'Cancelar', // Cambio del texto del botón de cancelar
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const date = new Date().toISOString();
+          const id = talla.subc_Id;
+          const deleteTalla = {
+            subc_Id: id,
+            subc_FechaEliminacion: date,
+              usua_UsuarioEliminacion: 1
+        };
 
-      const subCategorias = await get();
-      if (Array.isArray(subCategorias)) {
-        setData(subCategorias);
-        setFilteredData(subCategorias);
-      } else {
-        throw new Error('Data format is incorrect');
-      }
-    } catch (error) {
-      notification.error({ message: 'Error al eliminar la subcategoría', description: error.message });
-    }
+          const response = await eliminar(deleteTalla);
+
+          if (response.code === 200) {
+            notification.success({ message: 'Operacion realizada correctamente' });
+          } else {
+            notification.error({ message: 'No se puede eliminar este registro' });
+          }
+          const tallas = await get();
+          if (Array.isArray(tallas)) {
+            setData(tallas);
+            setFilteredData(tallas);
+          } else {
+            throw new Error('Data format is incorrect');
+          }
+        } catch (error) {
+          notification.error({ message: 'Operacion no realizada', description: error.message });
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -163,20 +184,15 @@ const SubCategoria = () => {
           >
             Detalles
           </Button>
-          <Popconfirm
-            title="¿Estás seguro de eliminar esta subcategoría?"
-            onConfirm={() => handleDelete(record.subc_Id)}
-            okText="Sí"
-            cancelText="No"
+      
+             <Button
+            icon={<DeleteFilled />}
+            onClick={() => handleDelete(record)}
+            danger
+            type='primary'
           >
-            <Button
-              icon={<DeleteOutlined />}
-              style={{ backgroundColor: 'red' }}
-              type='primary'
-            >
-              Eliminar
-            </Button>
-          </Popconfirm>
+            Eliminar
+          </Button>
         </Row>
       ),
     },

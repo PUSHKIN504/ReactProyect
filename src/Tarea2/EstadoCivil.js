@@ -132,7 +132,7 @@ const Talla = () => {
           if (response.code === 200) {
             notification.success({ message: 'Operacion realizada correctamente' });
           } else {
-            notification.error({ message: 'Operacion no realizada' });
+            notification.error({ message: 'No se puede eliminar este registro' });
           }
           const tallas = await get();
           if (Array.isArray(tallas)) {
