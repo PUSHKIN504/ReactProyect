@@ -74,10 +74,14 @@ export const protectedRoutes = [
     },
     {
         key: 'apps.tarea2.FormasPagos',
-        path: `${APP_PREFIX_PATH}/EstadoCivil`,
-        component: React.lazy(() => import('Tarea2/EstadoCivil')),
+        path: `${APP_PREFIX_PATH}/FormaPago`,
+        component: React.lazy(() => import('Tarea2/FormaPago')),
     },
-
+    {
+        key: 'apps.tarea2.SubCategoria',
+        path: `${APP_PREFIX_PATH}/SubCategoria`,
+        component: React.lazy(() => import('Tarea2/SubCategoria')),
+    },
     {
         key: 'components.data-display',
         path: `${APP_PREFIX_PATH}/components/data-display`,

@@ -9,13 +9,18 @@ import {
   StopOutlined,
   DotChartOutlined,
   MailOutlined,
+  SwitcherFilled,
   DeleteOutlined,
+  CreditCardFilled,
+  HeartFilled,
+  DeleteFilled,
   MessageOutlined,
   CalendarOutlined,
   BulbOutlined,
   InfoCircleOutlined,
   CompassOutlined,
   LayoutOutlined,
+  BookFilled,
   DesktopOutlined,
   FileDoneOutlined,
   CommentOutlined,
@@ -67,14 +72,14 @@ const appsNavTree = [{
       key: 'apps-tarea1',
       path: `${APP_PREFIX_PATH}/components/data-display`,
       title: 'sidenav.apps.tarea1',
-      icon: DeleteOutlined,
+      icon: BookFilled,
       breadcrumb: true,
       submenu: [
         {
           key: 'apss-tarea1-axion',
           path: `${APP_PREFIX_PATH}/axion`,
           title: 'sidenav.apps.tarea1.axion',
-          icon: '',
+          icon: DeleteFilled,
           breadcrumb: true,
           submenu: []
         },
@@ -82,7 +87,7 @@ const appsNavTree = [{
           key: 'apss-tarea1-fetch',
           path: `${APP_PREFIX_PATH}/fetch`,
           title: 'sidenav.apps.tarea1.fetch',
-          icon: '',
+          icon: DeleteFilled,
           breadcrumb: true,
           submenu: []
         },
@@ -94,22 +99,30 @@ const appsNavTree = [{
       key: 'apps-tarea2',
       path: `${APP_PREFIX_PATH}/components/data-display`,
       title: 'sidenav.apps.tarea2',
-      icon: DeleteOutlined,
+      icon: BookFilled,
       breadcrumb: true,
       submenu: [
         {
           key: 'apss-tarea2-EstadoCivil',
           path: `${APP_PREFIX_PATH}/EstadoCivil`,
           title: 'sidenav.apps.tarea2.EstadoCivil',
-          icon: '',
+          icon: HeartFilled,
           breadcrumb: true,
           submenu: []
         },
         {
           key: 'apss-tarea2-FormasPagos',
-          path: `${APP_PREFIX_PATH}/EstadoCivil`,
+          path: `${APP_PREFIX_PATH}/FormaPago`,
           title: 'sidenav.apps.tarea2.FormasPagos',
-          icon: '',
+          icon: CreditCardFilled,
+          breadcrumb: true,
+          submenu: []
+        },
+        {
+          key: 'apss-tarea2-SubCategorias',
+          path: `${APP_PREFIX_PATH}/SubCategoria`,
+          title: 'sidenav.apps.tarea2.SubCategorias',
+          icon: SwitcherFilled,
           breadcrumb: true,
           submenu: []
         },
@@ -119,23 +132,6 @@ const appsNavTree = [{
 }]
 
 const componentsNavTree = [
-  {
-    key: 'components-data-display',
-    path: `${APP_PREFIX_PATH}/components/data-display`,
-    title: 'sidenav.components.dataDisplay',
-    icon: DesktopOutlined,
-    breadcrumb: true,
-    submenu: [
-      {
-        key: 'components-data-display-avatar',
-        path: `${APP_PREFIX_PATH}/components/data-display/avatar`,
-        title: 'sidenav.components.dataDisplay.avatar',
-        icon: '',
-        breadcrumb: true,
-        submenu: []
-      }
-    ]
-  }
 ]
 
 const docsNavTree = [

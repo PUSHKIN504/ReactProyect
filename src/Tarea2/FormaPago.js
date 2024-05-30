@@ -3,7 +3,7 @@ import { Table, Spin, Alert, Input, Checkbox, Card, Button, Form, notification, 
 import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, DeleteFilled, CaretLeftFilled } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
-import { get, insertar, editar, eliminar } from 'services/EstadoCivilService';
+import { get, insertar, editar, eliminar } from 'services/FormaPagoService';
 
 const { Panel } = Collapse;
 
@@ -79,9 +79,9 @@ const Talla = () => {
           ...currentTalla,
           ...values,
           escv_EsAduana: aduanaValue,
-          escv_FechaModificacion: date,
+          fopa_FechaModificacion: date,
           usua_UsuarioModificacion: 1
-        };
+        };  
         await editar(updatedTalla);
         notification.success({ message: 'Operacion realizada correctamente' });
       } else {
@@ -89,7 +89,7 @@ const Talla = () => {
         const newTalla = {
           ...values,
           escv_EsAduana: aduanaValue,
-          escv_FechaCreacion: date,
+          fopa_FechaCreacion: date,
           usua_UsuarioCreacion: 1,
         };
         await insertar(newTalla);
@@ -109,44 +109,6 @@ const Talla = () => {
     }
   };
 
-  const handleDelete = async (talla) => {
-    Modal.confirm({
-      title: '¿Estás seguro de eliminar este registro?',
-      content: 'Esta acción no se puede deshacer',
-      okText: 'Eliminar', // Cambio del texto del botón de confirmación
-      cancelText: 'Cancelar', // Cambio del texto del botón de cancelar
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          const values = await form.validateFields();
-          const date = new Date().toISOString();
-          const id = talla.escv_Id;
-          const deleteTalla = {
-            escv_Id: id,
-            escv_FechaEliminacion: date,
-            usua_UsuarioEliminacion: 1
-          };
-
-          const response = await eliminar(deleteTalla);
-
-          if (response.code === 200) {
-            notification.success({ message: 'Operacion realizada correctamente' });
-          } else {
-            notification.error({ message: 'Operacion no realizada' });
-          }
-          const tallas = await get();
-          if (Array.isArray(tallas)) {
-            setData(tallas);
-            setFilteredData(tallas);
-          } else {
-            throw new Error('Data format is incorrect');
-          }
-        } catch (error) {
-          notification.error({ message: 'Operacion no realizada', description: error.message });
-        }
-      },
-    });
-  };
 
   if (loading) {
     return (
@@ -161,14 +123,14 @@ const Talla = () => {
   const columns = [
     {
       title: 'Codigo',
-      dataIndex: 'escv_Id',
-      key: 'escv_Id',
+      dataIndex: 'fopa_Id',
+      key: 'fopa_Id',
       align: 'center'
     },
     {
       title: 'Nombre',
-      dataIndex: 'escv_Nombre',
-      key: 'escv_Nombre',
+      dataIndex: 'fopa_Descripcion',
+      key: 'fopa_Descripcion',
       align: 'center',
     },
     {
@@ -193,14 +155,7 @@ const Talla = () => {
           >
             Detalles
           </Button>
-          <Button
-            icon={<DeleteFilled />}
-            onClick={() => handleDelete(record)}
-            danger
-            type='primary'
-          >
-            Eliminar
-          </Button>
+        
         </Row>
       ),
     },
@@ -230,16 +185,16 @@ const Talla = () => {
   const auditData = [
     {
       key: '1',
-      usuario: currentTalla?.usuarioCreacionNombre,
+      usuario: currentTalla?.usua_NombreCreacion,
       accion: 'Creado',
-      fecha: currentTalla?.escv_FechaCreacion,
+      fecha: currentTalla?.fopa_FechaCreacion,
       align: 'center',
     },
     {
       key: '2',
-      usuario: currentTalla?.usuarioModificacionNombre,
+      usuario: currentTalla?.usua_NombreModificacion,
       accion: 'Modificado',
-      fecha: currentTalla?.escv_FechaModificacion,
+      fecha: currentTalla?.fopa_FechaModificacion,
       align: 'center',
     },
   ];
@@ -262,7 +217,7 @@ const Talla = () => {
             <Table
               columns={columns}
               dataSource={filteredData}
-              rowKey="escv_Id"
+              rowKey="fopa_Id"
             />
           </div>
         </>
@@ -282,10 +237,10 @@ const Talla = () => {
                   </Row>
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Descriptions.Item label="ID"> {currentTalla.escv_Id}</Descriptions.Item>
+                      <Descriptions.Item label="ID"> {currentTalla.fopa_Id}</Descriptions.Item>
                     </Col>
                     <Col span={12}>
-                      <Descriptions.Item label="Nombre">{currentTalla.escv_Nombre}</Descriptions.Item>
+                      <Descriptions.Item label="Nombre">{currentTalla.fopa_Descripcion}</Descriptions.Item>
                     </Col>
                   </Row>
                 </Card>
@@ -301,22 +256,10 @@ const Talla = () => {
               <Form form={form} layout="vertical" className="ant-advanced-search-form">
                 <Row gutter={24}>
                   <Col span={12}>
-                    <Form.Item name="escv_Nombre" label="Nombre" rules={[{ required: true, message: 'Por favor, ingrese el nombre' }]}>
+                    <Form.Item name="fopa_Descripcion" label="Nombre" rules={[{ required: true, message: 'Por favor, ingrese el nombre' }]}>
                       <Input />
                     </Form.Item>
                   </Col>
-                  {!currentTalla && (
-                    <>
-                      <Col span={6}>
-                        <label>Aduana</label>
-                      </Col>
-                      <Col span={6}>
-                        <Form.Item name="escv_EsAduana" label=" ">
-                          <Checkbox checked={isAduanaChecked} onChange={handleCheckboxChange}></Checkbox>
-                        </Form.Item>
-                      </Col>
-                    </>
-                  )}
                 </Row>
                 <Divider />
                 <Button icon={<PlusCircleFilled />} type="primary" onClick={handleSubmit}>Guardar</Button>
