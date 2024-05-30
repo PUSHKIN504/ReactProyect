@@ -91,8 +91,8 @@ export const protectedRoutes = [
     },
     {
         key: 'apps.tarea3.PersonaNatura',
-        path: `${APP_PREFIX_PATH}/EstadoCivil`,
-        component: React.lazy(() => import('Tarea2/EstadoCivil')),
+        path: `${APP_PREFIX_PATH}/PersonaNatural`,
+        component: React.lazy(() => import('Tarea3/PersonaNatural')),
     },
     {
         key: 'apps.tarea3.Duca',

@@ -142,7 +142,7 @@ const appsNavTree = [{
       submenu: [
         {
           key: 'apss-tarea23-PersonaNatura',
-          path: `${APP_PREFIX_PATH}/EstadoCivil`,
+          path: `${APP_PREFIX_PATH}/PersonaNatural`,
           title: 'sidenav.apps.tarea3.PersonaNatural',
           icon: SmileFilled,
           breadcrumb: true,
