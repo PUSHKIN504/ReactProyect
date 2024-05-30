@@ -82,6 +82,34 @@ export const protectedRoutes = [
         path: `${APP_PREFIX_PATH}/SubCategoria`,
         component: React.lazy(() => import('Tarea2/SubCategoria')),
     },
+
+
+    {
+        key: 'apps.tarea3',
+        path: `${APP_PREFIX_PATH}/components/data-display`,
+        component: React.lazy(() => import('views/app-views/components/data-display')),
+    },
+    {
+        key: 'apps.tarea3.PersonaNatura',
+        path: `${APP_PREFIX_PATH}/EstadoCivil`,
+        component: React.lazy(() => import('Tarea2/EstadoCivil')),
+    },
+    {
+        key: 'apps.tarea3.Duca',
+        path: `${APP_PREFIX_PATH}/FormaPago`,
+        component: React.lazy(() => import('Tarea2/FormaPago')),
+    },
+
+
+
+
+
+
+
+
+
+
+
     {
         key: 'components.data-display',
         path: `${APP_PREFIX_PATH}/components/data-display`,

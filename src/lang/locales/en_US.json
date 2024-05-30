@@ -8,6 +8,12 @@
 	"sidenav.apps.tarea2.FormasPagos": "Formas Pagos",
 	"sidenav.apps.tarea2.SubCategorias": "Sub Categorias",
 
+
+	"sidenav.apps.tarea3": "Tarea 3",
+	"sidenav.apps.tarea3.PersonaNatural": "Persona Natural",
+	"sidenav.apps.tarea3.Duca": "Duca",
+
+
 	"sidenav.components.dataDisplay": "Data Display",
 	"sidenav.components.dataDisplay.avatar": "Avatar"
 }
