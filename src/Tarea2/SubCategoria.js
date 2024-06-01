@@ -136,7 +136,7 @@ const SubCategoria = () => {
       }
       handleCollapseClose();
     } catch (error) {
-      notification.error({ message: 'Operación no realizada', description: error.message });
+    //   notification.error({ message: 'Operación no realizada', description: error.message });
     }
   };
 
@@ -344,7 +344,7 @@ const SubCategoria = () => {
                     <Table bordered className='justify-content-center' columns={auditColumns} dataSource={auditData} pagination={false} />
                   </div>
                 </Card>
-                <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Cancelar</Button>
+                <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Volver</Button>
               </>
             ) : (
               <Form form={form} layout="vertical" className="ant-advanced-search-form">

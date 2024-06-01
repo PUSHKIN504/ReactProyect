@@ -1,13 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Spin, Alert, Input, Checkbox, Card, Button, Form, notification, Collapse, Modal, Descriptions, Row, Col, Divider } from 'antd';
-import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, DeleteFilled, CaretLeftFilled } from '@ant-design/icons';
+import { Table, Spin, Alert, Input, Button,Modal, Select ,Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
+import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
+import { DeleteOutlined,DeleteFilled } from '@ant-design/icons'; // Agregar importación aquí
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
-import { get, insertar, editar, eliminar } from 'services/EstadoCivilService';
+import { get, insertar, editar, eliminar, getPerson,getPais } from 'services/PersonaNaturalService';
 
 const { Panel } = Collapse;
+const { Option } = Select;
 
-const Talla = () => {
+function onChange(value) {
+    console.log(`selected ${value}`);
+  }
+  
+  function onBlur() {
+    console.log('blur');
+  }
+  
+  function onFocus() {
+    console.log('focus');
+  }
+  
+  function onSearch(val) {
+    console.log('search:', val);
+  }
+  
+
+  
+const SubCategoria = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,16 +35,17 @@ const Talla = () => {
   const [activeKey, setActiveKey] = useState(null);
   const [showTable, setShowTable] = useState(true);
   const [form] = Form.useForm();
-  const [currentTalla, setCurrentTalla] = useState(null);
-  const [isAduanaChecked, setIsAduanaChecked] = useState(false);
+  const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
+  const [getPersonas, setPerson] = useState([]);
+  const [getPaises, setPaises] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const tallas = await get();
-        if (Array.isArray(tallas)) {
-          setData(tallas);
-          setFilteredData(tallas);
+        const subCategorias = await get();
+        if (Array.isArray(subCategorias)) {
+          setData(subCategorias);
+          setFilteredData(subCategorias);
         } else {
           throw new Error('Data format is incorrect');
         }
@@ -38,74 +59,104 @@ const Talla = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchPerson = async () => {
+      try {
+        const Person = await getPerson();
+        if (Array.isArray(Person)) {
+          setPerson(Person);
+        } else {
+          throw new Error('Data format is incorrect');
+        }
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+
+    fetchPerson();
+  }, []);
+
+  useEffect(() => {
+    const fetchPais = async () => {
+      try {
+        const Paises = await getPais();
+        if (Array.isArray(Paises)) {
+          setPaises(Paises);
+        } else {
+          throw new Error('Data format is incorrect');
+        }
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+
+    fetchPais();
+  }, []);
+
   const handleSearch = (e) => {
     const value = e.currentTarget.value.toLowerCase();
     const filtered = utils.wildCardSearch(data, value);
     setFilteredData(filtered);
   };
 
-  const handleCollapseOpen = (key, talla = null) => {
+  const handleCollapseOpen = (key, subCategoria = null) => {
     setActiveKey(key);
-    setCurrentTalla(talla);
+    setCurrentSubCategoria(subCategoria);
     setShowTable(false);
-    if (talla) {
-      form.setFieldsValue(talla);
-      setIsAduanaChecked(talla.escv_EsAduana === 1);
+    if (subCategoria) {
+      form.setFieldsValue(subCategoria);
     } else {
       form.resetFields();
-      setIsAduanaChecked(false);
     }
   };
 
   const handleCollapseClose = () => {
     setActiveKey(null);
-    setCurrentTalla(null);
+    setCurrentSubCategoria(null);
     setShowTable(true);
-  };
-
-  const handleCheckboxChange = (e) => {
-    setIsAduanaChecked(e.target.checked);
   };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       const date = new Date().toISOString();
-      const aduanaValue = isAduanaChecked ? true : false;
 
-      if (currentTalla) {
+      if (currentSubCategoria) {
         // Editar
-        const updatedTalla = {
-          ...currentTalla,
+        const updatedSubCategoria = {
+          ...currentSubCategoria,
           ...values,
-          escv_EsAduana: aduanaValue,
-          escv_FechaModificacion: date,
+          subc_FechaModificacion: date,
           usua_UsuarioModificacion: 1
         };
-        await editar(updatedTalla);
-        notification.success({ message: 'Operacion realizada correctamente' });
+        await editar(updatedSubCategoria);
+        notification.success({ message: 'Operación realizada correctamente' });
       } else {
         // Nuevo
-        const newTalla = {
+        const newSubCategoria = {
           ...values,
-          escv_EsAduana: aduanaValue,
-          escv_FechaCreacion: date,
+          subc_FechaCreacion: date,
           usua_UsuarioCreacion: 1,
+          subc_Estado: true
         };
-        await insertar(newTalla);
-        notification.success({ message: 'Operacion realizada correctamente' });
+        await insertar(newSubCategoria);
+        notification.success({ message: 'Operación realizada correctamente' });
       }
 
-      const tallas = await get();
-      if (Array.isArray(tallas)) {
-        setData(tallas);
-        setFilteredData(tallas);
+      const subCategorias = await get();
+      if (Array.isArray(subCategorias)) {
+        setData(subCategorias);
+        setFilteredData(subCategorias);
       } else {
         throw new Error('Data format is incorrect');
       }
       handleCollapseClose();
     } catch (error) {
-      notification.error({ message: 'Operacion no realizada', description: error.message });
+    //   notification.error({ message: 'Operación no realizada', description: error.message });
     }
   };
 
@@ -118,14 +169,13 @@ const Talla = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          const values = await form.validateFields();
           const date = new Date().toISOString();
-          const id = talla.escv_Id;
+          const id = talla.subc_Id;
           const deleteTalla = {
-            escv_Id: id,
-            escv_FechaEliminacion: date,
-            usua_UsuarioEliminacion: 1
-          };
+            subc_Id: id,
+            subc_FechaEliminacion: date,
+              usua_UsuarioEliminacion: 1
+        };
 
           const response = await eliminar(deleteTalla);
 
@@ -160,15 +210,15 @@ const Talla = () => {
 
   const columns = [
     {
-      title: 'Codigo',
-      dataIndex: 'escv_Id',
-      key: 'escv_Id',
+      title: 'Código',
+      dataIndex: 'subc_Id',
+      key: 'subc_Id',
       align: 'center'
     },
     {
-      title: 'Nombre',
-      dataIndex: 'escv_Nombre',
-      key: 'escv_Nombre',
+      title: 'Descripción',
+      dataIndex: 'subc_Descripcion',
+      key: 'subc_Descripcion',
       align: 'center',
     },
     {
@@ -180,7 +230,7 @@ const Talla = () => {
           <Button
             icon={<EditFilled />}
             onClick={() => handleCollapseOpen('edit', record)}
-            style={{ marginRight: 8, backgroundColor: 'orange' }}
+            style={{ marginRight:8, backgroundColor: 'orange' }}
             type='primary'
           >
             Editar
@@ -193,7 +243,8 @@ const Talla = () => {
           >
             Detalles
           </Button>
-          <Button
+      
+             <Button
             icon={<DeleteFilled />}
             onClick={() => handleDelete(record)}
             danger
@@ -231,15 +282,15 @@ const Talla = () => {
     {
       key: '1',
       accion: 'Creado',
-      usuario: currentTalla?.usuarioCreacionNombre,
-      fecha: currentTalla?.escv_FechaCreacion,
+      usuario: currentSubCategoria?.usuarioCreacionNombre,
+      fecha: currentSubCategoria?.subc_FechaCreacion,
       align: 'center',
     },
     {
       key: '2',
       accion: 'Modificado',
-      usuario: currentTalla?.usuarioModificacionNombre,
-      fecha: currentTalla?.escv_FechaModificacion,
+      usuario: currentSubCategoria?.usuarioModificaNombre,
+      fecha: currentSubCategoria?.subc_FechaModificacion,
       align: 'center',
     },
   ];
@@ -262,61 +313,116 @@ const Talla = () => {
             <Table
               columns={columns}
               dataSource={filteredData}
-              rowKey="escv_Id"
+              rowKey="subc_Id"
+              expandable={{
+                expandedRowRender: record => <p>Categoría: {record.cate_Descripcion}</p>,
+                rowExpandable: record => record.cate_Id !== null,
+              }}
             />
           </div>
         </>
       ) : (
         <Collapse activeKey={activeKey}>
-          <Panel header={currentTalla ? (activeKey === 'details' ? 'Detalles ' : 'Editar Registro') : 'Nuevo Registro'} key={activeKey}>
+          <Panel header={currentSubCategoria ? (activeKey === 'details' ? 'Detalles ' : 'Editar Registro') : 'Nuevo Registro'} key={activeKey}>
             {activeKey === 'details' ? (
               <>
                 <Card title="" bordered={false}>
                   <Row gutter={16}>
                     <Col span={12}>
-                      <h5>Codigo: </h5>
+                      <h5>Código: </h5>
                     </Col>
                     <Col span={12}>
-                      <h5>Nombre: </h5>
+                      <h5>Categoría: </h5>
                     </Col>
+                    
                   </Row>
+                
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Descriptions.Item label="ID"> {currentTalla.escv_Id}</Descriptions.Item>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.subc_Id}</Descriptions.Item>
                     </Col>
                     <Col span={12}>
-                      <Descriptions.Item label="Nombre">{currentTalla.escv_Nombre}</Descriptions.Item>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.cate_Descripcion}</Descriptions.Item>
+                    </Col>
+                  </Row>
+                
+                  <Divider></Divider>
+                  <Row gutter={16}>
+                 
+                    <Col span={12}>
+                      <h5>Descripción: </h5>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                  <Col span={12}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.subc_Descripcion}</Descriptions.Item>
                     </Col>
                   </Row>
                 </Card>
                 <Card title="Auditoría" bordered={false} style={{ marginTop: 16 }}>
-                  <div className='table-borderead'>
-                  <Table bordered className='justify-content-center' columns={auditColumns} dataSource={auditData} pagination={false} />
+                  <div className='table-bordered'>
+                    <Table bordered className='justify-content-center' columns={auditColumns} dataSource={auditData} pagination={false} />
                   </div>
-                
                 </Card>
-                <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Cancelar</Button>
+                <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Volver</Button>
               </>
             ) : (
               <Form form={form} layout="vertical" className="ant-advanced-search-form">
                 <Row gutter={24}>
+                  
                   <Col span={12}>
-                    <Form.Item name="escv_Nombre" label="Nombre" rules={[{ required: true, message: 'Por favor, ingrese el nombre' }]}>
+                    <Form.Item name="subc_Descripcion" label="PERSONA DNI" rules={[{ required: true, message: 'Por favor, ingrese la descripción' }]}>
                       <Input />
                     </Form.Item>
                   </Col>
-                  {!currentTalla && (
-                    <>
-                      <Col span={6}>
-                        <label>Aduana</label>
-                      </Col>
-                      <Col span={6}>
-                        <Form.Item name="escv_EsAduana" label=" ">
-                          <Checkbox checked={isAduanaChecked} onChange={handleCheckboxChange}></Checkbox>
-                        </Form.Item>
-                      </Col>
-                    </>
-                  )}
+                  <Col span={12}>
+                    <Form.Item name="pers_Id" label="PERSONA" rules={[{ required: true, message: 'Por favor, ingrese el ID de la persona' }]}>
+                    <Select
+                            showSearch
+                            placeholder="Seleccione"
+                            optionFilterProp="children"
+                            onChange={onChange}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                            onSearch={onSearch}
+                            filterOption={(input, option) =>
+                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                            }
+                        >
+                            {getPersonas.map((person) => (
+                            <Option key={person.pers_Id} value={person.pers_Id}>
+                                {person.pers_Nombre}
+                            </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={24}>
+                  <Col span={12}>
+                    <Form.Item name="pais_Id" label="PAIS" rules={[{ required: true, message: 'Por favor, ingrese el pais' }]}>
+                    <Select
+                            showSearch
+                            placeholder="Seleccione"
+                            optionFilterProp="children"
+                            onChange={onChange}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                            onSearch={onSearch}
+                            filterOption={(input, option) =>
+                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                            }
+                        >
+                            {getPaises.map((paises) => (
+                            <Option key={paises.pais_Id} value={paises.pais_Id}>
+                                {paises.pais_Nombre}
+                            </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                  </Col>
                 </Row>
                 <Divider />
                 <Button icon={<PlusCircleFilled />} type="primary" onClick={handleSubmit}>Guardar</Button>
@@ -330,4 +436,6 @@ const Talla = () => {
   );
 };
 
-export default Talla;
+export default SubCategoria;
+
+ 
