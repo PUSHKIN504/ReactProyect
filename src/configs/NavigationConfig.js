@@ -141,7 +141,7 @@ const appsNavTree = [{
       breadcrumb: true,
       submenu: [
         {
-          key: 'apss-tarea23-PersonaNatura',
+          key: 'apss-tarea3-PersonaNatura',
           path: `${APP_PREFIX_PATH}/PersonaNatural`,
           title: 'sidenav.apps.tarea3.PersonaNatural',
           icon: SmileFilled,

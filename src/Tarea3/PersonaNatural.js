@@ -1,441 +1,631 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Spin, Alert, Input, Button,Modal, Select ,Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
-import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
-import { DeleteOutlined,DeleteFilled } from '@ant-design/icons'; // Agregar importación aquí
-import Flex from 'components/shared-components/Flex';
-import utils from 'utils';
-import { get, insertar, editar, eliminar, getPerson,getPais } from 'services/PersonaNaturalService';
+import React from 'react';
+import { Form, Input, DatePicker, Select, Button, Tabs, Row, Col, Checkbox } from 'antd';
+import  { useState } from 'react';
+import axios from 'axios';
+const API_URL = 'https://localhost:44380/api/SubCategoria';
+const API_KEY = '4b567cb1c6b24b51ab55248f8e66e5cc';
 
-const { Panel } = Collapse;
+const axiosInstance = axios.create({
+  headers: {
+    'XApiKey': API_KEY,
+    'accept': '/',
+  }
+});
+const { TabPane } = Tabs;
 const { Option } = Select;
 
-function onChange(value) {
-    console.log(`selected ${value}`);
-  }
-  
-  function onBlur() {
-    console.log('blur');
-  }
-  
-  function onFocus() {
-    console.log('focus');
-  }
-  
-  function onSearch(val) {
-    console.log('search:', val);
-  }
-  
-
-  
-const SubCategoria = () => {
-  const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeKey, setActiveKey] = useState(null);
-  const [showTable, setShowTable] = useState(true);
+const UDP_tbDuca_InsertarTab1 = () => {
   const [form] = Form.useForm();
-  const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
-  const [getPersonas, setPerson] = useState([]);
-  const [getPaises, setPaises] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const subCategorias = await get();
-        if (Array.isArray(subCategorias)) {
-          setData(subCategorias);
-          setFilteredData(subCategorias);
-        } else {
-          throw new Error('Data format is incorrect');
-        }
-        setLoading(false);
-      } catch (error) {
-        setError(error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchPerson = async () => {
-      try {
-        const Person = await getPerson();
-        if (Array.isArray(Person)) {
-          setPerson(Person);
-        } else {
-          throw new Error('Data format is incorrect');
-        }
-        setLoading(false);
-      } catch (error) {
-        setError(error);
-        setLoading(false);
-      }
-    };
-
-    fetchPerson();
-  }, []);
-
-  useEffect(() => {
-    const fetchPais = async () => {
-      try {
-        const Paises = await getPais();
-        if (Array.isArray(Paises)) {
-          setPaises(Paises);
-        } else {
-          throw new Error('Data format is incorrect');
-        }
-        setLoading(false);
-      } catch (error) {
-        setError(error);
-        setLoading(false);
-      }
-    };
-
-    fetchPais();
-  }, []);
-
-  const handleSearch = (e) => {
-    const value = e.currentTarget.value.toLowerCase();
-    const filtered = utils.wildCardSearch(data, value);
-    setFilteredData(filtered);
-  };
-
-  const handleCollapseOpen = (key, subCategoria = null) => {
-    setActiveKey(key);
-    setCurrentSubCategoria(subCategoria);
-    setShowTable(false);
-    if (subCategoria) {
-      form.setFieldsValue(subCategoria);
-    } else {
-      form.resetFields();
-    }
-  };
-
-  const handleCollapseClose = () => {
-    setActiveKey(null);
-    setCurrentSubCategoria(null);
-    setShowTable(true);
-  };
-
-  const handleSubmit = async () => {
+  const [form2] = Form.useForm();
+  const [form3] = Form.useForm();
+  const [showTransportistaFields, setShowTransportistaFields] = useState(false);
+  const onFinish = async (values) => {
     try {
-      const values = await form.validateFields();
-      const date = new Date().toISOString();
-
-      if (currentSubCategoria) {
-        // Editar
-        const updatedSubCategoria = {
-          ...currentSubCategoria,
-          ...values,
-          subc_FechaModificacion: date,
-          usua_UsuarioModificacion: 1
-        };
-        await editar(updatedSubCategoria);
-        notification.success({ message: 'Operación realizada correctamente' });
-      } else {
-        // Nuevo
-        const newSubCategoria = {
-          ...values,
-          subc_FechaCreacion: date,
-          usua_UsuarioCreacion: 1,
-          subc_Estado: true
-        };
-        await insertar(newSubCategoria);
-        notification.success({ message: 'Operación realizada correctamente' });
-      }
-
-      const subCategorias = await get();
-      if (Array.isArray(subCategorias)) {
-        setData(subCategorias);
-        setFilteredData(subCategorias);
-      } else {
-        throw new Error('Data format is incorrect');
-      }
-      handleCollapseClose();
+      console.log('Tab 1 values:', values);
+      const response = await axios.post(`${API_URL}/InsertarTab1`, values, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
     } catch (error) {
-    //   notification.error({ message: 'Operación no realizada', description: error.message });
+      console.error(error);
+      throw error;
     }
   };
 
-  const handleDelete = async (talla) => {
-    Modal.confirm({
-      title: '¿Estás seguro de eliminar este registro?',
-      content: 'Esta acción no se puede deshacer',
-      okText: 'Eliminar', // Cambio del texto del botón de confirmación
-      cancelText: 'Cancelar', // Cambio del texto del botón de cancelar
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          const date = new Date().toISOString();
-          const id = talla.subc_Id;
-          const deleteTalla = {
-            subc_Id: id,
-            subc_FechaEliminacion: date,
-              usua_UsuarioEliminacion: 1
-        };
-
-          const response = await eliminar(deleteTalla);
-
-          if (response.code === 200) {
-            notification.success({ message: 'Operacion realizada correctamente' });
-          } else {
-            notification.error({ message: 'No se puede eliminar este registro' });
-          }
-          const tallas = await get();
-          if (Array.isArray(tallas)) {
-            setData(tallas);
-            setFilteredData(tallas);
-          } else {
-            throw new Error('Data format is incorrect');
-          }
-        } catch (error) {
-          notification.error({ message: 'Operacion no realizada', description: error.message });
-        }
-      },
-    });
+  const onFinishTab2 = (values) => {
+    console.log('Tab 2 values:', values);
+    // Handle form submission for Tab 2
+    // axios.post('your_api_endpoint_tab2', values)
+    //   .then(response => {
+    //     message.success('Data submitted successfully for Tab 2');
+    //   })
+    //   .catch(error => {
+    //     message.error('Submission failed for Tab 2');
+    //   });
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin tip="Cargando..." />
-      </div>
-    );
-  }
-
-  if (error) return <Alert message="Error" description={error.message} type="error" showIcon />;
-
-  const columns = [
-    {
-      title: 'Código',
-      dataIndex: 'subc_Id',
-      key: 'subc_Id',
-      align: 'center'
-    },
-    {
-      title: 'Descripción',
-      dataIndex: 'subc_Descripcion',
-      key: 'subc_Descripcion',
-      align: 'center',
-    },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      align: 'center',
-      render: (text, record) => (
-        <Row justify="center">
-          <Button
-            icon={<EditFilled />}
-            onClick={() => handleCollapseOpen('edit', record)}
-            style={{ marginRight:8, backgroundColor: 'orange' }}
-            type='primary'
-          >
-            Editar
-          </Button>
-          <Button
-            icon={<EyeFilled />}
-            onClick={() => handleCollapseOpen('details', record)}
-            style={{ marginRight: 8, backgroundColor: 'darkgray' }}
-            type='primary'
-          >
-            Detalles
-          </Button>
-      
-             <Button
-            icon={<DeleteFilled />}
-            onClick={() => handleDelete(record)}
-            danger
-            type='primary'
-          >
-            Eliminar
-          </Button>
-        </Row>
-      ),
-    },
-  ];
-
-  const auditColumns = [
-    {
-      title: 'Acción',
-      dataIndex: 'accion',
-      key: 'accion',
-      align: 'center',
-    },
-    {
-      title: 'Usuario',
-      dataIndex: 'usuario',
-      key: 'usuario',
-      align: 'center',
-    },
-    {
-      title: 'Fecha',
-      dataIndex: 'fecha',
-      key: 'fecha',
-      align: 'center',
-    },
-  ];
-
-  const auditData = [
-    {
-      key: '1',
-      accion: 'Creado',
-      usuario: currentSubCategoria?.usuarioCreacionNombre,
-      fecha: currentSubCategoria?.subc_FechaCreacion,
-      align: 'center',
-    },
-    {
-      key: '2',
-      accion: 'Modificado',
-      usuario: currentSubCategoria?.usuarioModificaNombre,
-      fecha: currentSubCategoria?.subc_FechaModificacion,
-      align: 'center',
-    },
-  ];
+  const onFinishTab3 = (values) => {
+    console.log('Tab 3 values:', values);
+    // Handle form submission for Tab 3
+    // axios.post('your_api_endpoint_tab3', values)
+    //   .then(response => {
+    //     message.success('Data submitted successfully for Tab 3');
+    //   })
+    //   .catch(error => {
+    //     message.error('Submission failed for Tab 3');
+    //   });
+  };
 
   return (
-    <Card>
-      {showTable ? (
-        <>
-          <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
-            <div>
-              <Button type="primary" icon={<PlusCircleFilled />} onClick={() => handleCollapseOpen('new')} block>Nuevo</Button>
-            </div>
-            <Flex className="mb-1" mobileFlex={false}>
-              <div className="mr-md-3 mb-3">
-                <Input placeholder="Buscar" prefix={<SearchOutlined />} onChange={handleSearch} />
-              </div>
-            </Flex>
-          </Flex>
-          <div className="table-responsive">
-            <Table
-              columns={columns}
-              dataSource={filteredData}
-              rowKey="subc_Id"
-              expandable={{
-                expandedRowRender: record => <p>Categoría: {record.cate_Descripcion}</p>,
-                rowExpandable: record => record.cate_Id !== null,
-              }}
-            />
-          </div>
-        </>
-      ) : (
-        <Collapse activeKey={activeKey}>
-          <Panel header={currentSubCategoria ? (activeKey === 'details' ? 'Detalles ' : 'Editar Registro') : 'Nuevo Registro'} key={activeKey}>
-            {activeKey === 'details' ? (
-              <>
-                <Card title="" bordered={false}>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <h5>Código: </h5>
-                    </Col>
-                    <Col span={12}>
-                      <h5>Categoría: </h5>
-                    </Col>
-                    
-                  </Row>
-                
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Descriptions.Item label="ID"> {currentSubCategoria.subc_Id}</Descriptions.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Descriptions.Item label="ID"> {currentSubCategoria.cate_Descripcion}</Descriptions.Item>
-                    </Col>
-                  </Row>
-                
-                  <Divider></Divider>
-                  <Row gutter={16}>
-                 
-                    <Col span={12}>
-                      <h5>Descripción: </h5>
-                    </Col>
-                  </Row>
+    <Tabs defaultActiveKey="1">
+      <TabPane tab="Insertar Tab 1" key="1">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Id"
+                label="DUCA ID"
+                rules={[{ required: true, message: 'Please input DUCA ID!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_No_Duca"
+                label="No DUCA"
+                rules={[{ required: true, message: 'Please input No DUCA!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_No_Correlativo_Referencia"
+                label="No Correlativo Referencia"
+                rules={[{ required: true, message: 'Please input No Correlativo Referencia!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_AduanaRegistro"
+                label="Aduana Registro"
+                rules={[{ required: true, message: 'Please input Aduana Registro!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_AduanaDestino"
+                label="Aduana Destino"
+                rules={[{ required: true, message: 'Please input Aduana Destino!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Regimen_Aduanero"
+                label="Regimen Aduanero"
+                rules={[{ required: true, message: 'Please input Regimen Aduanero!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Modalidad"
+                label="Modalidad"
+                rules={[{ required: true, message: 'Please input Modalidad!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Clase"
+                label="Clase"
+                rules={[{ required: true, message: 'Please input Clase!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_FechaVencimiento"
+                label="Fecha Vencimiento"
+                rules={[{ required: true, message: 'Please input Fecha Vencimiento!' }]}
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Pais_Procedencia"
+                label="Pais Procedencia"
+                rules={[{ required: true, message: 'Please input Pais Procedencia!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Pais_Destino"
+                label="Pais Destino"
+                rules={[{ required: true, message: 'Please input Pais Destino!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Deposito_Aduanero"
+                label="Deposito Aduanero"
+                rules={[{ required: true, message: 'Please input Deposito Aduanero!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Lugar_Desembarque"
+                label="Lugar Desembarque"
+                rules={[{ required: true, message: 'Please input Lugar Desembarque!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Manifiesto"
+                label="Manifiesto"
+                rules={[{ required: true, message: 'Please input Manifiesto!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Titulo"
+                label="Titulo"
+                rules={[{ required: true, message: 'Please input Titulo!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="trli_Id"
+                label="TRLI ID"
+                rules={[{ required: true, message: 'Please input TRLI ID!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="usua_UsuarioCreacion"
+                label="Usuario Creacion"
+                rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_FechaCreacion"
+                label="Fecha Creacion"
+                rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </TabPane>
 
-                  <Row gutter={16}>
-                  <Col span={12}>
-                      <Descriptions.Item label="Categoría">{currentSubCategoria.subc_Descripcion}</Descriptions.Item>
-                    </Col>
-                  </Row>
-                </Card>
-                <Card title="Auditoría" bordered={false} style={{ marginTop: 16 }}>
-                  <div className='table-bordered'>
-                    <Table bordered className='justify-content-center' columns={auditColumns} dataSource={auditData} pagination={false} />
-                  </div>
-                </Card>
-                <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Volver</Button>
-              </>
-            ) : (
-              <Form form={form} layout="vertical" className="ant-advanced-search-form">
-                <Row gutter={24}>
-                  
-                  <Col span={12}>
-                    <Form.Item name="subc_Descripcion" label="PERSONA DNI" rules={[{ required: true, message: 'Por favor, ingrese la descripción' }]}>
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="pers_Id" label="PERSONA" rules={[{ required: true, message: 'Por favor, ingrese el ID de la persona' }]}>
-                    <Select
-                            showSearch
-                            placeholder="Seleccione"
-                            optionFilterProp="children"
-                            onChange={onChange}
-                            onFocus={onFocus}
-                            onBlur={onBlur}
-                            onSearch={onSearch}
-                            filterOption={(input, option) =>
-                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            {getPersonas.map((person) => (
-                            <Option key={person.pers_Id} value={person.pers_Id}>
-                                {person.pers_Nombre}
-                            </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
 
-                <Row gutter={24}>
-                  <Col span={12}>
-                    <Form.Item name="pais_Id" label="PAIS" rules={[{ required: true, message: 'Por favor, ingrese el pais' }]}>
-                    <Select
-                            showSearch
-                            placeholder="Seleccione"
-                            optionFilterProp="children"
-                            onChange={onChange}
-                            onFocus={onFocus}
-                            onBlur={onBlur}
-                            onSearch={onSearch}
-                            filterOption={(input, option) =>
-                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            {getPaises.map((paises) => (
-                            <Option key={paises.pais_Id} value={paises.pais_Id}>
-                                {paises.pais_Nombre}
-                            </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Divider />
-                <Button icon={<PlusCircleFilled />} type="primary" onClick={handleSubmit}>Guardar</Button>
-                <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>Volver</Button>
-              </Form>
-            )}
-          </Panel>
-        </Collapse>
-      )}
-    </Card>
+      <TabPane tab="Insertar Tab 2" key="2">
+        <Form
+          form={form2}
+          layout="vertical"
+          onFinish={onFinishTab2}
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Id"
+                label="DUCA ID"
+                rules={[{ required: true, message: 'Please input DUCA ID!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Codigo_Declarante"
+                label="Codigo Declarante"
+                rules={[{ required: true, message: 'Please input Codigo Declarante!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Numero_Id_Declarante"
+                label="Numero ID Declarante"
+                rules={[{ required: true, message: 'Please input Numero ID Declarante!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_NombreSocial_Declarante"
+                label="Nombre Social Declarante"
+                rules={[{ required: true, message: 'Please input Nombre Social Declarante!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="duca_DomicilioFiscal_Declarante"
+                label="Domicilio Fiscal Declarante"
+                rules={[{ required: true, message: 'Please input Domicilio Fiscal Declarante!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="duca_Codigo_Transportista"
+                label="Codigo Transportista"
+                rules={[{ required: true, message: 'Please input Codigo Transportista!' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Checkbox
+            checked={showTransportistaFields}
+            onChange={(e) => setShowTransportistaFields(e.target.checked)}
+          >
+            Agregar informacion del transportista
+          </Checkbox>
+          {showTransportistaFields && (
+            <>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="duca_Transportista_Nombre"
+                    label="Transportista Nombre"
+                    rules={[{ required: true, message: 'Please input Transportista Nombre!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="motr_Id"
+                    label="MOTR ID"
+                    rules={[{ required: true, message: 'Please input MOTR ID!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="cont_NoIdentificacion"
+                    label="No Identificacion"
+                    rules={[{ required: true, message: 'Please input No Identificacion!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="cont_Licencia"
+                    label="Licencia"
+                    rules={[{ required: true, message: 'Please input Licencia!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="pais_IdExpedicion"
+                    label="Pais Expedicion"
+                    rules={[{ required: true, message: 'Please input Pais Expedicion!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="cont_Nombre"
+                    label="Nombre"
+                    rules={[{ required: true, message: 'Please input Nombre!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="cont_Apellido"
+                    label="Apellido"
+                    rules={[{ required: true, message: 'Please input Apellido!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="pais_Id"
+                    label="Pais ID"
+                    rules={[{ required: true, message: 'Please input Pais ID!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="marca_Id"
+                    label="Marca ID"
+                    rules={[{ required: true, message: 'Please input Marca ID!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_IdUnidadTransporte"
+                    label="Unidad Transporte"
+                    rules={[{ required: true, message: 'Please input Unidad Transporte!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_Chasis"
+                    label="Chasis"
+                    rules={[{ required: true, message: 'Please input Chasis!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_Remolque"
+                    label="Remolque"
+                    rules={[{ required: true, message: 'Please input Remolque!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_CantCarga"
+                    label="Cantidad Carga"
+                    rules={[{ required: true, message: 'Please input Cantidad Carga!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_NumDispositivoSeguridad"
+                    label="Num Dispositivo Seguridad"
+                    rules={[{ required: true, message: 'Please input Num Dispositivo Seguridad!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_Equipamiento"
+                    label="Equipamiento"
+                    rules={[{ required: true, message: 'Please input Equipamiento!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_TamanioEquipamiento"
+                    label="Tamaño Equipamiento"
+                    rules={[{ required: true, message: 'Please input Tamaño Equipamiento!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_TipoCarga"
+                    label="Tipo Carga"
+                    rules={[{ required: true, message: 'Please input Tipo Carga!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_IdContenedor"
+                    label="ID Contenedor"
+                    rules={[{ required: true, message: 'Please input ID Contenedor!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="usua_UsuarioCreacion"
+                    label="Usuario Creacion"
+                    rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="tran_FechaCreacion"
+                    label="Fecha Creacion"
+                    rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}
+                  >
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </>
+          )}
+          <Form.Item>
+            <Button
+            type="primary"
+            htmlType="submit"
+            style={{ paddingTop: '6px' }}
+            >
+            Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </TabPane>
+
+
+      <TabPane tab="Insertar Tab 3" key="3">
+        <Form form={form3} layout="vertical" onFinish={onFinishTab3}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="tido_Id" label="TIDO ID" rules={[{ required: true, message: 'Please input TIDO ID!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="duca_Id" label="DUCA ID" rules={[{ required: true, message: 'Please input DUCA ID!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="doso_NumeroDocumento" label="Numero Documento" rules={[{ required: true, message: 'Please input Numero Documento!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="doso_FechaEmision" label="Fecha Emision" rules={[{ required: true, message: 'Please input Fecha Emision!' }]}>
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="doso_FechaVencimiento" label="Fecha Vencimiento" rules={[{ required: true, message: 'Please input Fecha Vencimiento!' }]}>
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="doso_PaisEmision" label="Pais Emision" rules={[{ required: true, message: 'Please input Pais Emision!' }]}>
+                <Select>
+                  {/* Populate options dynamically */}
+                  <Option value="1">Pais 1</Option>
+                  <Option value="2">Pais 2</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="doso_LineaAplica" label="Linea Aplica" rules={[{ required: true, message: 'Please input Linea Aplica!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="doso_EntiadEmitioDocumento" label="Entidad Emitio Documento" rules={[{ required: true, message: 'Please input Entidad Emitio Documento!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="doso_Monto" label="Monto" rules={[{ required: true, message: 'Please input Monto!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="usua_UsuarioCreacion" label="Usuario Creacion" rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="doso_FechaCreacion" label="Fecha Creacion" rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}>
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </TabPane>
+    </Tabs>
   );
 };
 
-export default SubCategoria;
-
- 
+export default UDP_tbDuca_InsertarTab1;
