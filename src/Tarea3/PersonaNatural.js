@@ -1,32 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Spin, Alert, Input, Button,Modal, Select ,Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Popconfirm } from 'antd';
+import { Table, Spin, Alert, Input, Button, Modal, Select, Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Steps } from 'antd';
 import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
-import { DeleteOutlined,DeleteFilled } from '@ant-design/icons'; // Agregar importación aquí
+import { DeleteFilled } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
-import { get, insertar, editar, eliminar, getPerson,getPais } from 'services/PersonaNaturalService';
+import { get, insertar, editar, eliminar, getPerson, getPais } from 'services/PersonaNaturalService';
 
+const { Search } = Input;
 const { Panel } = Collapse;
 const { Option } = Select;
+const { Step } = Steps;
 
-function onChange(value) {
-    console.log(`selected ${value}`);
-  }
-  
-  function onBlur() {
-    console.log('blur');
-  }
-  
-  function onFocus() {
-    console.log('focus');
-  }
-  
-  function onSearch(val) {
-    console.log('search:', val);
-  }
-  
-
-  
 const SubCategoria = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -38,6 +22,7 @@ const SubCategoria = () => {
   const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
   const [getPersonas, setPerson] = useState([]);
   const [getPaises, setPaises] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,6 +103,7 @@ const SubCategoria = () => {
     setActiveKey(null);
     setCurrentSubCategoria(null);
     setShowTable(true);
+    setCurrentStep(0); // Reset the step when closing
   };
 
   const handleSubmit = async () => {
@@ -156,7 +142,7 @@ const SubCategoria = () => {
       }
       handleCollapseClose();
     } catch (error) {
-    //   notification.error({ message: 'Operación no realizada', description: error.message });
+      notification.error({ message: 'Operación no realizada', description: error.message });
     }
   };
 
@@ -164,8 +150,8 @@ const SubCategoria = () => {
     Modal.confirm({
       title: '¿Estás seguro de eliminar este registro?',
       content: 'Esta acción no se puede deshacer',
-      okText: 'Eliminar', // Cambio del texto del botón de confirmación
-      cancelText: 'Cancelar', // Cambio del texto del botón de cancelar
+      okText: 'Eliminar',
+      cancelText: 'Cancelar',
       okType: 'danger',
       onOk: async () => {
         try {
@@ -174,13 +160,13 @@ const SubCategoria = () => {
           const deleteTalla = {
             subc_Id: id,
             subc_FechaEliminacion: date,
-              usua_UsuarioEliminacion: 1
-        };
+            usua_UsuarioEliminacion: 1
+          };
 
           const response = await eliminar(deleteTalla);
 
           if (response.code === 200) {
-            notification.success({ message: 'Operacion realizada correctamente' });
+            notification.success({ message: 'Operación realizada correctamente' });
           } else {
             notification.error({ message: 'No se puede eliminar este registro' });
           }
@@ -192,10 +178,27 @@ const SubCategoria = () => {
             throw new Error('Data format is incorrect');
           }
         } catch (error) {
-          notification.error({ message: 'Operacion no realizada', description: error.message });
+          notification.error({ message: 'Operación no realizada', description: error.message });
         }
       },
     });
+  };
+
+  const handleSearchByDNI = (value) => {
+    const person = getPersonas.find((p) => p.pers_RTN === value);
+    if (person) {
+      form.setFieldsValue({ pers_Id: person.pers_Id });
+    } else {
+      notification.error({ message: 'El RTN ingresado no es valido' });
+    }
+  };
+
+  const next = () => {
+    setCurrentStep(currentStep + 1);
+  };
+
+  const prev = () => {
+    setCurrentStep(currentStep - 1);
   };
 
   if (loading) {
@@ -230,7 +233,7 @@ const SubCategoria = () => {
           <Button
             icon={<EditFilled />}
             onClick={() => handleCollapseOpen('edit', record)}
-            style={{ marginRight:8, backgroundColor: 'orange' }}
+            style={{ marginRight: 8, backgroundColor: 'orange' }}
             type='primary'
           >
             Editar
@@ -243,8 +246,8 @@ const SubCategoria = () => {
           >
             Detalles
           </Button>
-      
-             <Button
+
+          <Button
             icon={<DeleteFilled />}
             onClick={() => handleDelete(record)}
             danger
@@ -295,6 +298,66 @@ const SubCategoria = () => {
     },
   ];
 
+  const steps = [
+    {
+      title: 'Paso 1',
+      content: (
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item name="subc_Descripcion" label="PERSONA RTN" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
+              <Search placeholder="Buscar..." onSearch={handleSearchByDNI} enterButton />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="pers_Id" label="PERSONA" rules={[{ required: true, message: 'Por favor, seleccione la persona' }]}>
+              <Select
+                showSearch
+                placeholder="Seleccione"
+                optionFilterProp="children"
+                onChange={(value) => form.setFieldsValue({ pers_Id: value })}
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {getPersonas.map((person) => (
+                  <Option key={person.pers_Id} value={person.pers_Id}>
+                    {person.pers_Nombre}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+      ),
+    },
+    {
+      title: 'Paso 2',
+      content: (
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item name="pais_Id" label="PAIS" rules={[{ required: true, message: 'Por favor, seleccione el país' }]}>
+              <Select
+                showSearch
+                placeholder="Seleccione"
+                optionFilterProp="children"
+                onChange={(value) => form.setFieldsValue({ pais_Id: value })}
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {getPaises.map((pais) => (
+                  <Option key={pais.pais_Id} value={pais.pais_Id}>
+                    {pais.pais_Nombre}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+      ),
+    },
+  ];
+
   return (
     <Card>
       {showTable ? (
@@ -334,9 +397,7 @@ const SubCategoria = () => {
                     <Col span={12}>
                       <h5>Categoría: </h5>
                     </Col>
-                    
                   </Row>
-                
                   <Row gutter={16}>
                     <Col span={12}>
                       <Descriptions.Item label="ID"> {currentSubCategoria.subc_Id}</Descriptions.Item>
@@ -345,17 +406,14 @@ const SubCategoria = () => {
                       <Descriptions.Item label="ID"> {currentSubCategoria.cate_Descripcion}</Descriptions.Item>
                     </Col>
                   </Row>
-                
                   <Divider></Divider>
                   <Row gutter={16}>
-                 
                     <Col span={12}>
                       <h5>Descripción: </h5>
                     </Col>
                   </Row>
-
                   <Row gutter={16}>
-                  <Col span={12}>
+                    <Col span={12}>
                       <Descriptions.Item label="Categoría">{currentSubCategoria.subc_Descripcion}</Descriptions.Item>
                     </Col>
                   </Row>
@@ -368,66 +426,36 @@ const SubCategoria = () => {
                 <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Volver</Button>
               </>
             ) : (
-              <Form form={form} layout="vertical" className="ant-advanced-search-form">
-                <Row gutter={24}>
-                  
-                  <Col span={12}>
-                    <Form.Item name="subc_Descripcion" label="PERSONA DNI" rules={[{ required: true, message: 'Por favor, ingrese la descripción' }]}>
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="pers_Id" label="PERSONA" rules={[{ required: true, message: 'Por favor, ingrese el ID de la persona' }]}>
-                    <Select
-                            showSearch
-                            placeholder="Seleccione"
-                            optionFilterProp="children"
-                            onChange={onChange}
-                            onFocus={onFocus}
-                            onBlur={onBlur}
-                            onSearch={onSearch}
-                            filterOption={(input, option) =>
-                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            {getPersonas.map((person) => (
-                            <Option key={person.pers_Id} value={person.pers_Id}>
-                                {person.pers_Nombre}
-                            </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={24}>
-                  <Col span={12}>
-                    <Form.Item name="pais_Id" label="PAIS" rules={[{ required: true, message: 'Por favor, ingrese el pais' }]}>
-                    <Select
-                            showSearch
-                            placeholder="Seleccione"
-                            optionFilterProp="children"
-                            onChange={onChange}
-                            onFocus={onFocus}
-                            onBlur={onBlur}
-                            onSearch={onSearch}
-                            filterOption={(input, option) =>
-                            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                            }
-                        >
-                            {getPaises.map((paises) => (
-                            <Option key={paises.pais_Id} value={paises.pais_Id}>
-                                {paises.pais_Nombre}
-                            </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Divider />
-                <Button icon={<PlusCircleFilled />} type="primary" onClick={handleSubmit}>Guardar</Button>
-                <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>Volver</Button>
-              </Form>
+              <>
+                <Steps current={currentStep}>
+                  {steps.map(item => (
+                    <Step key={item.title} title={item.title} />
+                  ))}
+                </Steps>
+                <Form form={form} layout="vertical" className="ant-advanced-search-form" style={{ marginTop: 16 }}>
+                  {steps[currentStep].content}
+                  <div className="steps-action">
+                    {currentStep < steps.length - 1 && (
+                      <Button type="primary" onClick={() => next()}>
+                        Siguiente
+                      </Button>
+                    )}
+                    {currentStep === steps.length - 1 && (
+                      <Button type="primary" onClick={handleSubmit}>
+                        Guardar
+                      </Button>
+                    )}
+                    {currentStep > 0 && (
+                      <Button style={{ marginLeft: 8 }} onClick={() => prev()}>
+                        Anterior
+                      </Button>
+                    )}
+                    <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>
+                      Volver
+                    </Button>
+                  </div>
+                </Form>
+              </>
             )}
           </Panel>
         </Collapse>
@@ -437,5 +465,3 @@ const SubCategoria = () => {
 };
 
 export default SubCategoria;
-
- 
