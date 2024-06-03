@@ -4,12 +4,30 @@ import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFille
 import { DeleteFilled } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
-import { get, insertar, editar, eliminar, getPerson, getPais } from 'services/PersonaNaturalService';
-
+import { get, insertar, editar, eliminar, getPerson, getCiudades, getProvincias } from 'services/PersonaNaturalService';
+import { Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 const { Search } = Input;
 const { Panel } = Collapse;
 const { Option } = Select;
 const { Step } = Steps;
+
+const { TextArea } = Input;
+const props = {
+  action: '//jsonplaceholder.typicode.com/posts/',
+  listType: 'picture',
+  previewFile(file) {
+    console.log('Your upload file:', file);
+    // Your process logic. Here we just mock to the same file
+    return fetch('https://next.json-generator.com/api/json/get/4ytyBoLK8', {
+      method: 'POST',
+      body: file,
+    })
+      .then(res => res.json())
+      .then(({ thumbnail }) => thumbnail);
+  },
+}
+
 
 const SubCategoria = () => {
   const [data, setData] = useState([]);
@@ -21,10 +39,10 @@ const SubCategoria = () => {
   const [form] = Form.useForm();
   const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
   const [getPersonas, setPerson] = useState([]);
-  const [getPaises, setPaises] = useState([]);
+  const [getprovincias, setProvincias] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
-
-  useEffect(() => {
+  const [getciudades, setCiudades] = useState([]);
+    useEffect(() => {
     const fetchData = async () => {
       try {
         const subCategorias = await get();
@@ -66,9 +84,9 @@ const SubCategoria = () => {
   useEffect(() => {
     const fetchPais = async () => {
       try {
-        const Paises = await getPais();
-        if (Array.isArray(Paises)) {
-          setPaises(Paises);
+        const Provincias = await getProvincias();
+        if (Array.isArray(Provincias)) {
+          setProvincias(Provincias);
         } else {
           throw new Error('Data format is incorrect');
         }
@@ -81,6 +99,26 @@ const SubCategoria = () => {
 
     fetchPais();
   }, []);
+
+  useEffect(() => {
+    const fetchCiudades = async () => {
+      try {
+        const Ciudades = await getCiudades();
+        if (Array.isArray(Ciudades)) {
+          setCiudades(Ciudades);
+        } else {
+          throw new Error('Data format is incorrect');
+        }
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+
+    fetchCiudades();
+  }, []);
+
 
   const handleSearch = (e) => {
     const value = e.currentTarget.value.toLowerCase();
@@ -193,6 +231,7 @@ const SubCategoria = () => {
     }
   };
 
+
   const next = () => {
     setCurrentStep(currentStep + 1);
   };
@@ -300,16 +339,16 @@ const SubCategoria = () => {
 
   const steps = [
     {
-      title: 'Paso 1',
+      title: '',
       content: (
         <Row gutter={24}>
           <Col span={12}>
-            <Form.Item name="subc_Descripcion" label="PERSONA RTN" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
+            <Form.Item name="" label="Persona RTN">
               <Search placeholder="Buscar..." onSearch={handleSearchByDNI} enterButton />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="pers_Id" label="PERSONA" rules={[{ required: true, message: 'Por favor, seleccione la persona' }]}>
+            <Form.Item name="pers_Id" label="Persona" rules={[{ required: true, message: 'Por favor, seleccione la persona' }]}>
               <Select
                 showSearch
                 placeholder="Seleccione"
@@ -327,35 +366,153 @@ const SubCategoria = () => {
               </Select>
             </Form.Item>
           </Col>
+          <Col span={12}>
+          <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'Por favor, ingrese el RTN' }]}>
+            <Input />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item name="pena_NombreArchRTN" label="Archivo RTN" rules={[{ required: true, message: 'Por favor, ingrese el archivo RTN' }]}>
+          <Upload {...props}>
+             <Button>
+               <UploadOutlined /> Upload
+            </Button>
+          </Upload>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
+            <Input />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item name="pena_NombreArchDNI" label="Archivo DNI" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+          <Upload {...props}>
+             <Button>
+               <UploadOutlined /> Upload
+            </Button>
+          </Upload>
+            </Form.Item>
+          </Col>
+      
+
+          <Col span={12}>
+          <Form.Item name="pena_NumeroRecibo" label="Numero Recibo" rules={[{ required: true, message: 'Por favor, ingrese el numero de recibo' }]}>
+            <Input />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item name="pena_NombreArchRecibo" label="Archivo Num. Recibio" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+          <Upload {...props}>
+             <Button>
+               <UploadOutlined /> Upload
+            </Button>
+          </Upload>
+            </Form.Item>
+          </Col>
         </Row>
+     
       ),
     },
     {
-      title: 'Paso 2',
+      title: '',
       content: (
         <Row gutter={24}>
-          <Col span={12}>
-            <Form.Item name="pais_Id" label="PAIS" rules={[{ required: true, message: 'Por favor, seleccione el país' }]}>
+           <Col span={12}>
+            <Form.Item name="pvin_Id" label="Departamento">
               <Select
                 showSearch
                 placeholder="Seleccione"
                 optionFilterProp="children"
-                onChange={(value) => form.setFieldsValue({ pais_Id: value })}
+                onChange={(value) => 
+                  form.setFieldsValue({ pvin_Id: value })
+                }
                 filterOption={(input, option) =>
                   option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }
               >
-                {getPaises.map((pais) => (
-                  <Option key={pais.pais_Id} value={pais.pais_Id}>
-                    {pais.pais_Nombre}
+                {getprovincias.map((prov) => (
+                  <Option key={prov.pvin_Id} value={prov.pvin_Id}>
+                    {prov.pvin_Nombre}
                   </Option>
                 ))}
               </Select>
             </Form.Item>
           </Col>
+          <Col span={12}>
+            <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'Por favor, ingrese la ciudad' }]}>
+              <Select
+                showSearch
+                placeholder="Seleccione"
+                optionFilterProp="children"
+                onChange={(value) => 
+                  form.setFieldsValue({ ciud_Id: value })
+                }
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {getciudades.map((ciudad) => (
+                  <Option key={ciudad.ciud_Id} value={ciudad.ciud_Id}>
+                    {ciudad.ciud_Nombre}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={24}>
+          <Form.Item name="pena_DireccionExacta" label="Direccion Exacta" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+          <TextArea rows={1}/>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item name="pena_TelefonoFijo" label="Telefono Fijo" rules={[{ required: true, message: 'Por favor, ingrese el telefono fijo' }]}>
+           <Input   defaultValue="+504" />
+    
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+          <Form.Item name="pena_TelefonoCelular" label="Telefono Celular" rules={[{ required: true, message: 'Por favor, ingrese el telefono celular' }]}>
+          <Input   defaultValue="+504" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+           <Form.Item name="pena_CorreoElectronico" label="Correo Electronico" rules={[{ required: true, message: 'Por favor, ingrese el correo electronico' }]}>
+     
+            <Input type='Email'/>
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+          </Col>
+          <Col span={6}>
+            <Form.Item name="" label=" " >
+            <Button type="primary">
+            Enviar Verificacion
+            </Button> 
+            </Form.Item>
+     
+          </Col>
+          <Col span={2}>
+          </Col>
+          <Col span={12}>
+           <Form.Item name="pena_CorreoAlternativo" label="Correo Alternativo">
+            <Input type='email'/>
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+          </Col>
+          <Col span={6}>
+            <Form.Item name="" label=" " >
+            <Button type="primary">
+            Enviar Verificacion
+            </Button> 
+            </Form.Item>
+     
+          </Col>
         </Row>
       ),
     },
+  
   ];
 
   return (
@@ -380,7 +537,7 @@ const SubCategoria = () => {
               expandable={{
                 expandedRowRender: record => <p>Categoría: {record.cate_Descripcion}</p>,
                 rowExpandable: record => record.cate_Id !== null,
-              }}
+              }}    
             />
           </div>
         </>

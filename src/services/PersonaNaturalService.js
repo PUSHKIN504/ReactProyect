@@ -38,6 +38,23 @@ export const getPerson = async () => {
       throw error;
     }
   };
+  export const getProvincias = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Provincias/Listar?pvin_EsAduana=false');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  export const getCiudades = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Ciudades/Listar?ciud_EsAduana=true');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 export const insertar = async (subcategoria) => {
   try {
