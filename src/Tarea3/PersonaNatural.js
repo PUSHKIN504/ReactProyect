@@ -1,10 +1,15 @@
 import React from 'react';
-import { Form, Input, DatePicker, Select, Button, Tabs, Row, Col, Checkbox } from 'antd';
+import { Form, Input, DatePicker, Select, Button, Tabs, Row, Col, Checkbox,Table } from 'antd';
 import  { useState } from 'react';
+import { useNavigate  } from 'react-router-dom';
 import axios from 'axios';
+import { SearchOutlined } from '@ant-design/icons';
+import { useForm, Controller } from 'react-hook-form';
+
+
+
 const API_URL = 'https://localhost:44380/api/SubCategoria';
 const API_KEY = '4b567cb1c6b24b51ab55248f8e66e5cc';
-
 const axiosInstance = axios.create({
   headers: {
     'XApiKey': API_KEY,
@@ -15,10 +20,99 @@ const { TabPane } = Tabs;
 const { Option } = Select;
 
 const UDP_tbDuca_InsertarTab1 = () => {
+  const navigate = useNavigate();
+  const [selectedDevIds, setSelectedDevIds] = useState([]);
+  const [form1] = Form.useForm();
   const [form] = Form.useForm();
   const [form2] = Form.useForm();
   const [form3] = Form.useForm();
+  const [filasDevas, setFilasDevas] = React.useState(10);
+  const [searchTextDevas, setSearchTextDevas] = React.useState('');
+  const [loadingGuardarDevas, setLoadingGuardarDevas] = React.useState(false);
   const [showTransportistaFields, setShowTransportistaFields] = useState(false);
+
+
+  const handleSeleccionarDevas = (e, devaId) => {
+      if (e.target.checked) {
+          setSelectedDevIds((prevSelectedDevIds) => [...prevSelectedDevIds, devaId]);
+      } else {
+          setSelectedDevIds(selectedDevIds.filter((id) => id !== devaId));
+      }
+  };
+
+  const columnsDevas = [
+    {
+        title: "No.",
+        dataIndex: "key",
+        key: "key",
+        sorter: (a, b) => a.key - b.key, // sorting for Numbers
+    },
+    {
+        title: "Código DEVA",
+        dataIndex: "deva_Id",
+        key: "deva_Id",
+        sorter: (a, b) => a.deva_Id - b.deva_Id,
+    },
+    {
+        title: "País de exportación",
+        dataIndex: "pais_Nombre",
+        key: "pais_Nombre",
+        sorter: (a, b) => a.pais_Nombre.localeCompare(b.pais_Nombre),
+    },
+    {
+        title: "Incoterm",
+        dataIndex: "inco_Codigo",
+        key: "inco_Codigo",
+        sorter: (a, b) => a.inco_Codigo.localeCompare(b.inco_Codigo),
+    },
+    {
+      title: "Seleccionar DEVA",
+      key: "operation",
+      render: (params) => (
+          <div key={params.deva_Id}>
+              <Checkbox
+                  aria-controls={`menu-${params.deva_Id}`}
+                  aria-haspopup="true"
+                  checked={selectedDevIds.includes(params.deva_Id)}
+                  onClick={(e) => handleSeleccionarDevas(e, params.deva_Id)}
+                  variant="contained"
+                  style={{
+                      borderRadius: "5px",
+                      backgroundColor: "#ebe6f7",
+                      alignItems: "center",
+                      color: "#634A9E",
+                      cursor: "pointer"
+                  }}
+              ></Checkbox>
+          </div>
+      ),
+  },
+];
+
+  const handleChangeFilasDevas = (value) => {
+    setFilasDevas(value);
+  };
+
+  const handleSearchChangeDevas = (e) => {
+    setSearchTextDevas(e.target.value);
+  };
+
+  const GuardarDEVAS = () => {
+    // Your save logic here
+  };
+  const filteredRowsDevas=[];
+
+  const onFinish1 = (values) => {
+    console.log('primertab:', values);
+    // Handle form submission for Tab 2
+    // axios.post('your_api_endpoint_tab2', values)
+    //   .then(response => {
+    //     message.success('Data submitted successfully for Tab 2');
+    //   })
+    //   .catch(error => {
+    //     message.error('Submission failed for Tab 2');
+    //   });
+  };
   const onFinish = async (values) => {
     try {
       console.log('Tab 1 values:', values);
@@ -60,202 +154,221 @@ const UDP_tbDuca_InsertarTab1 = () => {
 
   return (
     <Tabs defaultActiveKey="1">
-      <TabPane tab="Insertar Tab 1" key="1">
-        <Form
+       <Tabs.TabPane tab="Asignar DEVAS a una DUCA" key="1">
+       <Form
+          form={form1}
+          layout="vertical"
+          onFinish={onFinish1}
+        >
+          <Row gutter={16}>
+            <Col span={24}>
+              <div style={{ marginBottom: '20px', textAlign: 'right' }}>
+                <Input
+                  placeholder="Buscar"
+                  value={searchTextDevas}
+                  onChange={handleSearchChangeDevas}
+                  style={{ width: 200, marginRight: 16 }}
+                  suffix={<SearchOutlined />}
+                />
+                <Select
+                  value={filasDevas}
+                  onChange={handleChangeFilasDevas}
+                  style={{ width: 120 }}
+                >
+                  <Select.Option value={10}>10</Select.Option>
+                  <Select.Option value={20}>20</Select.Option>
+                  <Select.Option value={30}>30</Select.Option>
+                </Select>
+              </div>
+              <Table
+                columns={columnsDevas}
+                dataSource={filteredRowsDevas}
+                pagination={{ pageSize: filasDevas }}
+                size="small"
+              />
+              <div style={{ textAlign: 'right', marginTop: 16 }}>
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={GuardarDEVAS}
+                  loading={loadingGuardarDevas}
+                  style={{ marginRight: 8 }}
+                >
+                  {loadingGuardarDevas ? "Procesando..." : "Siguiente"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    navigate('/Duca/index');
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </Col>
+          </Row>
+          </Form>
+        </Tabs.TabPane>
+
+        {/* <Form
           form={form}
           layout="vertical"
           onFinish={onFinish}
-        >
-          <Row gutter={16}>
-            <Col span={12}>
+        > */}
+        
+
+        <TabPane tab="Identificación de la Declaración" key="2">
+        <Form form={form} onFinish={onFinish}>
+          <Row gutter={[16, 16]}>
+            <Col span={6}>
               <Form.Item
-                name="duca_Id"
-                label="DUCA ID"
-                rules={[{ required: true, message: 'Please input DUCA ID!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="duca_No_Duca"
-                label="No DUCA"
-                rules={[{ required: true, message: 'Please input No DUCA!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="duca_No_Correlativo_Referencia"
-                label="No Correlativo Referencia"
-                rules={[{ required: true, message: 'Please input No Correlativo Referencia!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="duca_AduanaRegistro"
-                label="Aduana Registro"
-                rules={[{ required: true, message: 'Please input Aduana Registro!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="duca_AduanaDestino"
-                label="Aduana Destino"
-                rules={[{ required: true, message: 'Please input Aduana Destino!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="duca_Regimen_Aduanero"
                 label="Regimen Aduanero"
-                rules={[{ required: true, message: 'Please input Regimen Aduanero!' }]}
+                name="RegimenAduanero"
+                rules={[{ required: true, message: 'Please select a Regimen Aduanero' }]}
               >
-                <Input />
+                <Select
+                  showSearch
+                  placeholder="Select a Regimen Aduanero"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                > 
+
+
+              
+                  {/* {RegimenesAduaneros.map((regimen) => (
+                    <Option key={regimen.value} value={regimen.value}>
+                      {regimen.label}
+                    </Option>
+                  ))} */}
+                </Select>
               </Form.Item>
             </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
+            <Col span={6}>
               <Form.Item
-                name="duca_Modalidad"
-                label="Modalidad"
-                rules={[{ required: true, message: 'Please input Modalidad!' }]}
+                label="No. de DUCA"
+                name="NoDuca"
+                rules={[{ required: true, message: 'Please enter the DUCA number' }]}
               >
-                <Input />
+                <Input placeholder="DUCA number" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={6}>
               <Form.Item
-                name="duca_Clase"
-                label="Clase"
-                rules={[{ required: true, message: 'Please input Clase!' }]}
+                label="No. Correlativo o Referencia"
+                name="NoCorrelativoReferencia"
+                rules={[{ required: true, message: 'Please enter the Correlativo or Referencia number' }]}
               >
-                <Input />
+                <Input placeholder="Correlativo or Referencia number" />
               </Form.Item>
             </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
+            <Col span={6}>
               <Form.Item
-                name="duca_FechaVencimiento"
-                label="Fecha Vencimiento"
-                rules={[{ required: true, message: 'Please input Fecha Vencimiento!' }]}
+                label="Aduana Registro"
+                name="AduanaRegistro"
+                rules={[{ required: true, message: 'Please select an Aduana Registro' }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select an Aduana Registro"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {/* {Aduanas.map((aduana) => (
+                    <Option key={aduana.value} value={aduana.value}>
+                      {aduana.label}
+                    </Option>
+                  ))} */}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item
+                label="Fecha de Vencimiento"
+                name="FechaVencimiento"
+                rules={[{ required: true, message: 'Please select a Fecha de Vencimiento' }]}
               >
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={6}>
               <Form.Item
-                name="duca_Pais_Procedencia"
-                label="Pais Procedencia"
-                rules={[{ required: true, message: 'Please input Pais Procedencia!' }]}
+                label="País de Procedencia"
+                name="PaisProcedencia"
+                rules={[{ required: true, message: 'Please select a País de Procedencia' }]}
               >
-                <Input />
+                <Select
+                  showSearch
+                  placeholder="Select a País de Procedencia"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {/* {PaisesProcedencia.map((pais) => (
+                    <Option key={pais.value} value={pais.value}>
+                      {pais.label}
+                    </Option>
+                  ))} */}
+                </Select>
               </Form.Item>
             </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
+            <Col span={6}>
               <Form.Item
-                name="duca_Pais_Destino"
-                label="Pais Destino"
-                rules={[{ required: true, message: 'Please input Pais Destino!' }]}
+                label="País de Destino"
+                name="PaisDestino"
+                rules={[{ required: true, message: 'Please select a País de Destino' }]}
               >
-                <Input />
+                <Select
+                  showSearch
+                  placeholder="Select a País de Destino"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {/* {PaisesDestino.map((pais) => (
+                    <Option key={pais.value} value={pais.value}>
+                      {pais.label}
+                    </Option>
+                  ))} */}
+                </Select>
               </Form.Item>
             </Col>
-            <Col span={12}>
+         
+            <Col span={6}>
               <Form.Item
-                name="duca_Deposito_Aduanero"
-                label="Deposito Aduanero"
-                rules={[{ required: true, message: 'Please input Deposito Aduanero!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="duca_Lugar_Desembarque"
-                label="Lugar Desembarque"
-                rules={[{ required: true, message: 'Please input Lugar Desembarque!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="duca_Manifiesto"
                 label="Manifiesto"
-                rules={[{ required: true, message: 'Please input Manifiesto!' }]}
+                name="Manifiesto"
+                rules={[{ required: true, message: 'Please enter the Manifiesto' }]}
               >
-                <Input />
+                <Input placeholder="Manifiesto" />
               </Form.Item>
             </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
+            <Col span={6}>
               <Form.Item
-                name="duca_Titulo"
                 label="Titulo"
-                rules={[{ required: true, message: 'Please input Titulo!' }]}
+                name="Titulo"
+                rules={[{ required: true, message: 'Please enter the Titulo' }]}
               >
-                <Input />
+                <Input placeholder="Titulo" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                name="trli_Id"
-                label="TRLI ID"
-                rules={[{ required: true, message: 'Please input TRLI ID!' }]}
-              >
-                <Input />
-              </Form.Item>
+            {/* Include other Form.Item components */}
+          </Row>
+          <Row>
+            <Col>
+              <Button type="primary" htmlType="submit">
+                Submit
+              </Button>
             </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="usua_UsuarioCreacion"
-                label="Usuario Creacion"
-                rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="duca_FechaCreacion"
-                label="Fecha Creacion"
-                rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Submit
-            </Button>
-          </Form.Item>
         </Form>
       </TabPane>
 
-
-      <TabPane tab="Insertar Tab 2" key="2">
+      <Tabs.TabPane tab="Insertar Tab 2" key="3">
         <Form
           form={form2}
           layout="vertical"
@@ -541,10 +654,10 @@ const UDP_tbDuca_InsertarTab1 = () => {
             </Button>
           </Form.Item>
         </Form>
-      </TabPane>
+      </Tabs.TabPane>
 
 
-      <TabPane tab="Insertar Tab 3" key="3">
+      <Tabs.TabPane tab="Insertar Tab 3" key="4">
         <Form form={form3} layout="vertical" onFinish={onFinishTab3}>
           <Row gutter={16}>
             <Col span={12}>
@@ -623,7 +736,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
             </Button>
           </Form.Item>
         </Form>
-      </TabPane>
+      </Tabs.TabPane>
     </Tabs>
   );
 };

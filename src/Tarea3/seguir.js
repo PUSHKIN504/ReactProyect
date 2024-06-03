@@ -568,71 +568,7 @@
                                     </Button>
                                 </Grid>
 
-                                <Grid item xs={4}>
-                                    <FormControl fullWidth={true}>
-                                        <FormLabel
-                                            error={!!errors1.Manifiesto}
-                                        >
-                                            Manifiesto:
-                                        </FormLabel>
-                                        <Controller
-                                            name="Manifiesto"
-                                            control={control1}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    value={datosTab1.Manifiesto}
-                                                    error={!!errors1.Manifiesto}
-                                                    inputProps={{
-                                                        maxLength: 17,
-                                                        style: {
-                                                            textTransform: "uppercase"
-                                                        },
-                                                        onKeyPress: (event) => {
-                                                            if (!/[A-Za-z0-9]/.test(event.key)) {
-                                                                event.preventDefault();
-                                                            }
-                                                        },
-                                                    }}
-                                                    helperText={errors1?.Manifiesto?.message.includes("required") ? "" : errors1?.Manifiesto?.message}
-                                                ></TextField>
-                                            )}
-                                        ></Controller>
-                                    </FormControl>
-                                </Grid>
-
-                                <Grid item xs={4}>
-                                    <FormControl fullWidth={true}>
-                                        <FormLabel
-                                            error={!!errors1.Titulo}
-                                        >
-                                            Titulo:
-                                        </FormLabel>
-                                        <Controller
-                                            name="Titulo"
-                                            control={control1}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    value={datosTab1.Titulo}
-                                                    error={!!errors1.Titulo}
-                                                    inputProps={{
-                                                        maxLength: 17,
-                                                        style: {
-                                                            textTransform: "uppercase"
-                                                        },
-                                                        onKeyPress: (event) => {
-                                                            if (!/[A-Za-z0-9]/.test(event.key)) {
-                                                                event.preventDefault();
-                                                            }
-                                                        },
-                                                    }}
-                                                    helperText={errors1?.Titulo?.message.includes("required") ? "" : errors1?.Titulo?.message}
-                                                ></TextField>
-                                            )}
-                                        ></Controller>
-                                    </FormControl>
-                                </Grid>
+                                
 
                                 <Grid item xs={4}>
                                     <FormControl fullWidth>
