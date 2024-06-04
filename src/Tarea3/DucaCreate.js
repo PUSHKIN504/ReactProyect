@@ -4,7 +4,7 @@ import  { useState,useEffect } from 'react';
 import { useNavigate  } from 'react-router-dom';
 import axios from 'axios';
 import { SearchOutlined,CheckOutlined   } from '@ant-design/icons';
-import { useForm, Controller } from 'react-hook-form';
+// import { useForm, Controller } from 'react-hook-form';
 
 
 
@@ -18,10 +18,6 @@ const axiosInstance = axios.create({
 });
 const { TabPane } = Tabs;
 const { Option } = Select;
-
-
-
-
 
 
 const UDP_tbDuca_InsertarTab1 = () => {
