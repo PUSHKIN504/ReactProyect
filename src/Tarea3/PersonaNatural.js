@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Spin, Alert, Input, Button, Modal, Select, Form, notification, Collapse, Card, Descriptions, Row, Col, Divider, Steps } from 'antd';
-import { SearchOutlined, PlusCircleFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
+import { SearchOutlined, PlusCircleFilled,CheckSquareFilled, EditFilled, EyeFilled, CaretLeftFilled } from '@ant-design/icons';
 import { DeleteFilled } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
-import { get, insertar, editar, eliminar, getPerson, getCiudades, getProvincias } from 'services/PersonaNaturalService';
+import { get, insertar, editar, getPerson, getCiudades, getCiudadesPorProvincia,getProvincias, finalizar } from 'services/PersonaNaturalService';
 import { Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import Fixed from 'views/app-views/components/layout/layout/Fixed';
 
 const { Search } = Input;
 const { Panel } = Collapse;
@@ -44,10 +45,15 @@ const SubCategoria = () => {
   const [getPersonas, setPerson] = useState([]);
   const [getprovincias, setProvincias] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [getciudades, setCiudades] = useState([]);
+  // const [getciudades, setCiudades] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState('Seleccione');
   const [selectedFileName2, setSelectedFileName2] = useState('Seleccione');
   const [selectedFileName3, setSelectedFileName3] = useState('Seleccione');
+
+  const [ciudades, setCiudades] = useState([]);
+const [defaultCiudadId, setdefaultCiudadId] = useState('0');
+const [selectedCiudad, setSelectedCiudad] = useState(null);
+
     useEffect(() => {
     const fetchData = async () => {
       try {
@@ -108,24 +114,19 @@ const SubCategoria = () => {
     fetchPais();
   }, []);
 
-  useEffect(() => {
-    const fetchCiudades = async () => {
-      try {
-        const Ciudades = await getCiudades();
-        if (Array.isArray(Ciudades)) {
-          setCiudades(Ciudades);
-        } else {
-          throw new Error('Data format is incorrect');
-        }
-        setLoading(false);
-      } catch (error) {
-        setError(error);
-        setLoading(false);
-      }
-    };
-
-    fetchCiudades();
-  }, []);
+  const fetchCiudades = async (valor) => {
+    console.log('CIUDADDD')
+    console.log('IDDD: ' + valor)
+    if (valor) {
+      const data = await getCiudadesPorProvincia(valor);
+      console.log(data)
+      setCiudades(data);
+    }
+    else {
+      setCiudades([]);
+      console.log("La provincia no tenia ciuadad");
+    }
+  };
 
 
   const handleSearch = (e) => {
@@ -137,15 +138,15 @@ const SubCategoria = () => {
   const handleCollapseOpen = (key, subCategoria = null) => {
     setActiveKey(key);
     setCurrentSubCategoria(subCategoria);
-    setSelectedFileName('Seleccione');
-    setSelectedFileName2('Seleccione');
-    setSelectedFileName3('Seleccione');
+    
     setShowTable(false);
     if (subCategoria) {
-      form.setFieldsValue(subCategoria);
-      
+      form.setFieldsValue(subCategoria); 
     } else {
       form.resetFields();
+      setSelectedFileName('Seleccione');
+      setSelectedFileName2('Seleccione');
+     setSelectedFileName3('Seleccione');
     }
   };
 
@@ -166,27 +167,62 @@ const SubCategoria = () => {
         const updatedSubCategoria = {
           ...currentSubCategoria,
           ...values,
-          subc_FechaModificacion: date,
+          pena_FechaModificacion: date,
           usua_UsuarioModificacion: 1
         };
         await editar(updatedSubCategoria);
         notification.success({ message: 'Operación realizada correctamente' });
+        handleCollapseClose();
       } else {
         // Nuevo
         const newSubCategoria = {
           ...values,
-          pena_ArchivoRTN: selectedFileName,
-          pena_ArchivoDNI: selectedFileName2,
-          pena_ArchivoNumeroRecibo: selectedFileName3,
+           pena_ArchivoRTN: selectedFileName,
+           pena_ArchivoDNI: selectedFileName2,
+           pena_ArchivoNumeroRecibo: selectedFileName3,
 
-          pena_NombreArchRTN: selectedFileName, 
-          pena_NombreArchDNI: selectedFileName2,
-          pena_NombreArchRecibo: selectedFileName3,
+           pena_NombreArchRTN: selectedFileName, 
+         pena_NombreArchDNI: selectedFileName2,
+           pena_NombreArchRecibo: selectedFileName3,
           pena_FechaCreacion: date,
           usua_UsuarioCreacion: 1,
           
         };
-        await insertar(newSubCategoria);
+        const response = await insertar(newSubCategoria);
+
+        const facturaId = response.data?.data?.messageStatus;
+          // Cookies.set('facturaId', facturaId);
+          console.log('ID de la factura almacenado en la cookie:', facturaId);
+
+        Modal.confirm({
+          title: 'Advertencia!',
+          content: '¿Desea Finalizar Este Registro?',
+          okText: 'SI',
+          cancelText: 'NO',
+          okType: 'danger',
+          onOk: async () => {
+            try {
+              const deleteTalla = {
+                pena_Id: facturaId,
+                pena_FechaEliminacion: date,
+                  usua_UsuarioEliminacion: 1
+            };
+
+              const response = await finalizar(deleteTalla);
+              if (response.code === 200) {
+                notification.success({ message: 'Operacion realizada correctamente' });
+                handleCollapseClose();
+              } else {
+                notification.error({ message: 'Operación no realizada' });
+              }
+            } catch (error) {
+              notification.error({ message: 'Operación no realizada', description: error.message });
+            }
+          },
+      
+          
+        });
+
         notification.success({ message: 'Operación realizada correctamente' });
       }
 
@@ -197,50 +233,19 @@ const SubCategoria = () => {
       } else {
         throw new Error('Data format is incorrect');
       }
-      handleCollapseClose();
+      
     } catch (error) {
       notification.error({ message: 'Operación no realizada', description: error.message });
     }
   };
 
-  const handleDelete = async (talla) => {
-    Modal.confirm({
-      title: '¿Estás seguro de eliminar este registro?',
-      content: 'Esta acción no se puede deshacer',
-      okText: 'Eliminar',
-      cancelText: 'Cancelar',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          const date = new Date().toISOString();
-          const id = talla.subc_Id;
-          const deleteTalla = {
-            subc_Id: id,
-            subc_FechaEliminacion: date,
-            usua_UsuarioEliminacion: 1
-          };
-
-          const response = await eliminar(deleteTalla);
-
-          if (response.code === 200) {
-            notification.success({ message: 'Operación realizada correctamente' });
-          } else {
-            notification.error({ message: 'No se puede eliminar este registro' });
-          }
-          const tallas = await get();
-          if (Array.isArray(tallas)) {
-            setData(tallas);
-            setFilteredData(tallas);
-          } else {
-            throw new Error('Data format is incorrect');
-          }
-        } catch (error) {
-          notification.error({ message: 'Operación no realizada', description: error.message });
-        }
-      },
-    });
+  const validateDescription = (_, value) => {
+    if (value && value.trim() === '') {
+      return Promise.reject(new Error('El Campo es Requerido'));
+    }
+    return Promise.resolve();
   };
-
+  
    const handleImageUpload = async ({ file }) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -253,9 +258,9 @@ const SubCategoria = () => {
         },
       });
       // setImageUrl(response.data.data.url);
-      notification.success({ message: 'Imagen subida correctamente' });
+      // notification.success({ message: 'Imagen subida correctamente' });
     } catch (error) {
-      notification.error({ message: 'Error al subir la imagen', description: 'Asegúrese que sea un Formato Valido' });
+      notification.error({ message: 'Error', description: 'Formatos Permitidos: .pdf , .docx' });
     }
   };
 
@@ -271,9 +276,9 @@ const SubCategoria = () => {
         },
       });
       // setImageUrl(response.data.data.url);
-      notification.success({ message: 'Imagen subida correctamente' });
+      // notification.success({ message: 'Imagen subida correctamente' });
     } catch (error) {
-      notification.error({ message: 'Error al subir la imagen', description: 'Asegúrese que sea un Formato Valido' });
+      notification.error({ message: 'Error', description: 'Formatos Permitidos: .pdf , .docx' });
     }
   };
 
@@ -289,11 +294,44 @@ const SubCategoria = () => {
         },
       });
       // setImageUrl(response.data.data.url);
-      notification.success({ message: 'Imagen subida correctamente' });
+      // notification.success({ message: 'Imagen subida correctamente' });
     } catch (error) {
-      notification.error({ message: 'Error al subir la imagen', description: 'Asegúrese que sea un Formato Valido' });
+      notification.error({ message: 'Error', description: 'Formatos Permitidos: .pdf , .docx' });
     }
   };
+
+  const handleFinalizar = async (talla) => {
+    Modal.confirm({
+      title: 'Advertencia!',
+      content: '¿Desea Finalizar Este Registro?',
+      okText: 'SI',
+      cancelText: 'NO',
+      
+      onOk: async () => {
+        try {
+          const date = new Date().toISOString();
+          const id = talla.pena_Id;
+          const deleteTalla = {
+            pena_Id: id,
+            pena_FechaEliminacion: date,
+              usua_UsuarioEliminacion: 1
+        };
+
+          const response = await finalizar(deleteTalla);
+
+          if (response.code === 200) {
+            notification.success({ message: 'Operacion realizada correctamente' });
+          } else {
+            notification.error({ message: 'No se puede eliminar este registro' });
+          }
+         
+        } catch (error) {
+          notification.error({ message: 'Operacion no realizada', description: error.message });
+        }
+      },
+    });
+  };
+
 
   const handleSearchByDNI = (value) => {
     const person = getPersonas.find((p) => p.pers_RTN === value);
@@ -305,13 +343,6 @@ const SubCategoria = () => {
   };
 
 
-  const next = () => {
-    setCurrentStep(currentStep + 1);
-  };
-
-  const prev = () => {
-    setCurrentStep(currentStep - 1);
-  };
 
   if (loading) {
     return (
@@ -326,22 +357,60 @@ const SubCategoria = () => {
   const columns = [
     {
       title: 'Código',
-      dataIndex: 'subc_Id',
-      key: 'subc_Id',
+      dataIndex: 'pena_Id',
+      key: 'pena_Id',
       align: 'center'
     },
     {
-      title: 'Descripción',
-      dataIndex: 'subc_Descripcion',
-      key: 'subc_Descripcion',
+      title: 'Cliente',
+      dataIndex: 'cliente',
+      key: 'cliente',
+      align: 'center',
+    },
+    {
+      title: 'RTN',
+      dataIndex: 'pena_RTN',
+      key: 'pena_RTN',
+      align: 'center',
+    },
+    {
+      title: 'DNI',
+      dataIndex: 'pena_DNI',
+      key: 'pena_DNI',
+      align: 'center',
+    },
+    {
+      title: 'Telefono Fijo',
+      dataIndex: 'pena_TelefonoFijo',
+      key: 'pena_TelefonoFijo',
+      align: 'center',
+    },
+    {
+      title: 'Correo Electronico',
+      dataIndex: 'pena_CorreoElectronico',
+      key: 'pena_CorreoElectronico',
+      align: 'center',
+    },
+    {
+      title: 'Ciudad',
+      dataIndex: 'ciud_Nombre',
+      key: 'ciud_Nombre',
+      align: 'center',
+    },
+    {
+      title: 'Provincia',
+      dataIndex: 'pvin_Nombre',
+      key: 'pvin_Nombre',
       align: 'center',
     },
     {
       title: 'Acciones',
       key: 'actions',
+      fixed: 'right',
+      width: 350,
       align: 'center',
       render: (text, record) => (
-        <Row justify="center">
+        <Row>
           <Button
             icon={<EditFilled />}
             onClick={() => handleCollapseOpen('edit', record)}
@@ -360,12 +429,12 @@ const SubCategoria = () => {
           </Button>
 
           <Button
-            icon={<DeleteFilled />}
-            onClick={() => handleDelete(record)}
+            icon={<CheckSquareFilled />}
+            onClick={() => handleFinalizar(record)}
             danger
             type='primary'
           >
-            Eliminar
+            Finalizar
           </Button>
         </Row>
       ),
@@ -397,15 +466,15 @@ const SubCategoria = () => {
     {
       key: '1',
       accion: 'Creado',
-      usuario: currentSubCategoria?.usuarioCreacionNombre,
-      fecha: currentSubCategoria?.subc_FechaCreacion,
+      usuario: currentSubCategoria?.usuarioCreacion,
+      fecha: currentSubCategoria?.pena_FechaCreacion,
       align: 'center',
     },
     {
       key: '2',
       accion: 'Modificado',
-      usuario: currentSubCategoria?.usuarioModificaNombre,
-      fecha: currentSubCategoria?.subc_FechaModificacion,
+      usuario: currentSubCategoria?.usuarioModificacion,
+      fecha: currentSubCategoria?.pena_FechaModificacion,
       align: 'center',
     },
   ];
@@ -426,14 +495,14 @@ const SubCategoria = () => {
               </div>
             </Flex>
           </Flex>
-          <div className="table-responsive">
+     
             <Table
               columns={columns}
               dataSource={filteredData}
               rowKey="pena_Id"
-                 
+              scroll={{ x: 1300 }}
             />
-          </div>
+         
         </>
       ) : (
         <Collapse activeKey={activeKey}>
@@ -441,33 +510,85 @@ const SubCategoria = () => {
             {activeKey === 'details' ? (
               <>
                 <Card title="" bordered={false}>
-                  <Row gutter={16}>
-                    <Col span={12}>
+                  <Row gutter={24}>
+                    <Col span={8}>
                       <h5>Código: </h5>
                     </Col>
-                    <Col span={12}>
-                      <h5>Categoría: </h5>
+                    <Col span={8}>
+                      <h5>RTN: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>DNI: </h5>
                     </Col>
                   </Row>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Descriptions.Item label="ID"> {currentSubCategoria.subc_Id}</Descriptions.Item>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.pena_Id}</Descriptions.Item>
                     </Col>
-                    <Col span={12}>
-                      <Descriptions.Item label="ID"> {currentSubCategoria.cate_Descripcion}</Descriptions.Item>
+                    <Col span={8}>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.pena_RTN}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.pena_DNI}</Descriptions.Item>
                     </Col>
                   </Row>
                   <Divider></Divider>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <h5>Descripción: </h5>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <h5>Cliente: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>Telefono Fijo: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>Telefono Celular: </h5>
                     </Col>
                   </Row>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Descriptions.Item label="Categoría">{currentSubCategoria.subc_Descripcion}</Descriptions.Item>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.cliente}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.pena_TelefonoFijo}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.pena_TelefonoCelular}</Descriptions.Item>
                     </Col>
                   </Row>
+                  <Divider></Divider>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <h5>Correo Electronico: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>Ciudad: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>Provincia: </h5>
+                    </Col>
+                  </Row>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <Descriptions.Item >{currentSubCategoria.pena_CorreoElectronico}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item >{currentSubCategoria.ciud_Nombre}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item >{currentSubCategoria.pvin_Nombre}</Descriptions.Item>
+                    </Col>
+                  </Row>
+
                 </Card>
                 <Card title="Auditoría" bordered={false} style={{ marginTop: 16 }}>
                   <div className='table-bordered'>
@@ -480,12 +601,14 @@ const SubCategoria = () => {
               <Form form={form} layout="vertical" className="ant-advanced-search-form">
               <Row gutter={24}>
                 <Col span={12}>
-                  <Form.Item name="busqueda" label="Persona RTN">
+                  <label>Buscar Por RTN</label>
+                  <br></br>
+                  <div className='mt-2'></div>
                   <Search placeholder="Buscar..." onSearch={handleSearchByDNI} enterButton />
-                  </Form.Item>
+                  
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="pers_Id" label="Persona" rules={[{ required: true, message: 'Por favor, seleccione la persona' }]}>
+                  <Form.Item name="pers_Id" label="Persona" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
                     <Select
                       showSearch
                       placeholder="Seleccione"
@@ -510,12 +633,12 @@ const SubCategoria = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'Por favor, ingrese el RTN' }]}>
+                <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'El Campo es Requerido' },{ validator: validateDescription },]}>
                   <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_NombreArchRTN" label="Archivo RTN" rules={[{ required: true, message: 'Por favor, ingrese el archivo RTN' }]}>
+                <Form.Item name="pena_NombreArchRTN" label="Archivo RTN" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
                 <Upload
                 showUploadList={false}
                 customRequest={handleImageUpload}
@@ -525,12 +648,12 @@ const SubCategoria = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
+                <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'El Campo es Requerido', }]}>
                   <Input type='text'/>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_NombreArchDNI" label="Archivo DNI" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+                <Form.Item name="pena_NombreArchDNI" label="Archivo DNI" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
                 <Upload
                 showUploadList={false}
                 customRequest={handleImageUpload2}
@@ -542,12 +665,12 @@ const SubCategoria = () => {
             
       
                 <Col span={12}>
-                <Form.Item name="pena_NumeroRecibo" label="Numero Recibo" rules={[{ required: true, message: 'Por favor, ingrese el numero de recibo' }]}>
+                <Form.Item name="pena_NumeroRecibo" label="Numero Recibo" rules={[{ required: true, message: 'El Campo es Requerido' },{ validator: validateDescription },]}>
                   <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_NombreArchRecibo" label="Archivo Num. Recibio" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+                <Form.Item name="pena_NombreArchRecibo" label="Archivo Num. Recibio" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
                 <Upload
                 showUploadList={false}
                 customRequest={handleImageUpload3}
@@ -565,12 +688,17 @@ const SubCategoria = () => {
                       showSearch
                       placeholder="Seleccione"
                       optionFilterProp="children"
-                      onChange={(value) => 
+                     onChange={(value) => 
+                      {
                         form.setFieldsValue({ pvin_Id: value })
+                      fetchCiudades(value)
+                    }
                       }
+                     
                       filterOption={(input, option) =>
                         option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                       }
+                      
                     >
                       {getprovincias.map((prov) => (
                         <Option key={prov.pvin_Id} value={prov.pvin_Id}>
@@ -581,7 +709,7 @@ const SubCategoria = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'Por favor, ingrese la ciudad' }]}>
+                  <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
                     <Select
                       showSearch
                       placeholder="Seleccione"
@@ -593,7 +721,7 @@ const SubCategoria = () => {
                         option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                       }
                     >
-                      {getciudades.map((ciudad) => (
+                      {ciudades.map((ciudad) => (
                         <Option key={ciudad.ciud_Id} value={ciudad.ciud_Id}>
                           {ciudad.ciud_Nombre}
                         </Option>
@@ -602,25 +730,25 @@ const SubCategoria = () => {
                   </Form.Item>
                 </Col>
                 <Col span={24}>
-                <Form.Item name="pena_DireccionExacta" label="Direccion Exacta" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+                <Form.Item name="pena_DireccionExacta" label="Direccion Exacta" rules={[{ required: true, message: 'El Campo es Requerido' },{ validator: validateDescription },]}>
                 <TextArea rows={1}/>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_TelefonoFijo" label="Telefono Fijo" rules={[{ required: true, message: 'Por favor, ingrese el telefono fijo' }]}>
+                <Form.Item name="pena_TelefonoFijo" label="Telefono Fijo" rules={[{ required: true, message: 'El Campo es Requerido' },{ validator: validateDescription },]}>
                  <Input   defaultValue="+504 " />
           
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                <Form.Item name="pena_TelefonoCelular" label="Telefono Celular" rules={[{ required: true, message: 'Por favor, ingrese el telefono celular' }]}>
+                <Form.Item name="pena_TelefonoCelular" label="Telefono Celular" rules={[{ required: true, message: 'El Campo es Requerido' },{ validator: validateDescription },]}>
                 <Input   defaultValue="+504 " />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                 <Form.Item name="pena_CorreoElectronico" label="Correo Electronico" rules={[{ required: true, message: 'Por favor, ingrese el correo electronico' }]}>
+                 <Form.Item name="pena_CorreoElectronico" label="Correo Electronico" rules={[{ required: true, message: 'El Campo es Requerido'},{ validator: validateDescription },]}>
            
-                  <Input type='Email'/>
+                  <Input/>
                   </Form.Item>
                 </Col>
                 <Col span={4}>
@@ -650,11 +778,7 @@ const SubCategoria = () => {
                   </Form.Item>
            
                 </Col>
-                <Col span={12}>
-                <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
-                  <Input type='text'/>
-                  </Form.Item>
-                </Col>
+            
               </Row>
               <Button icon={<PlusCircleFilled />} type="primary" onClick={handleSubmit}>Guardar</Button>
                 <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>Volver</Button>
