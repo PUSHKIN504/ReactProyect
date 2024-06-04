@@ -149,9 +149,9 @@ const appsNavTree = [{
           submenu: []
         },
         {
-          key: 'apss-tarea3-Duca',
-          path: `${APP_PREFIX_PATH}/FormaPago`,
-          title: 'sidenav.apps.tarea3.Duca',
+          key: 'apss-tarea3-DucaInde',
+          path: `${APP_PREFIX_PATH}/DucaIndex`,
+          title: 'sidenav.apps.tarea3.DucaIndex',
           icon: HddFilled,
           breadcrumb: true,
           submenu: []

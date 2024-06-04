@@ -95,9 +95,9 @@ export const protectedRoutes = [
         component: React.lazy(() => import('Tarea3/PersonaNatural')),
     },
     {
-        key: 'apps.tarea3.Duca',
-        path: `${APP_PREFIX_PATH}/FormaPago`,
-        component: React.lazy(() => import('Tarea2/FormaPago')),
+        key: 'apps.tarea3.DucaInde',
+        path: `${APP_PREFIX_PATH}/DucaIndex`,
+        component: React.lazy(() => import('Tarea3/DucaIndex')),
     },
 
 
