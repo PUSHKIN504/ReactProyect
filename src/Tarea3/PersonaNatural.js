@@ -7,27 +7,30 @@ import utils from 'utils';
 import { get, insertar, editar, eliminar, getPerson, getCiudades, getProvincias } from 'services/PersonaNaturalService';
 import { Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import axios from 'axios';
+
 const { Search } = Input;
 const { Panel } = Collapse;
 const { Option } = Select;
 const { Step } = Steps;
 
 const { TextArea } = Input;
-const props = {
-  action: '//jsonplaceholder.typicode.com/posts/',
-  listType: 'picture',
-  previewFile(file) {
-    console.log('Your upload file:', file);
-    // Your process logic. Here we just mock to the same file
-    return fetch('https://next.json-generator.com/api/json/get/4ytyBoLK8', {
-      method: 'POST',
-      body: file,
-    })
-      .then(res => res.json())
-      .then(({ thumbnail }) => thumbnail);
-  },
+
+function onChange(value) {
+  console.log(`selected ${value}`);
 }
 
+function onBlur() {
+  console.log('blur');
+}
+
+function onFocus() {
+  console.log('focus');
+}
+
+function onSearch(val) {
+  console.log('search:', val);
+}
 
 const SubCategoria = () => {
   const [data, setData] = useState([]);
@@ -42,6 +45,9 @@ const SubCategoria = () => {
   const [getprovincias, setProvincias] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [getciudades, setCiudades] = useState([]);
+  const [selectedFileName, setSelectedFileName] = useState('Seleccione');
+  const [selectedFileName2, setSelectedFileName2] = useState('Seleccione');
+  const [selectedFileName3, setSelectedFileName3] = useState('Seleccione');
     useEffect(() => {
     const fetchData = async () => {
       try {
@@ -86,8 +92,10 @@ const SubCategoria = () => {
       try {
         const Provincias = await getProvincias();
         if (Array.isArray(Provincias)) {
-          setProvincias(Provincias);
-        } else {
+          // Filtrar las provincias basadas en el pais_Id igual a 97
+        const filteredProvincias = Provincias.filter(provincia => provincia.pais_Id === 97);
+        setProvincias(filteredProvincias);
+        } else {  
           throw new Error('Data format is incorrect');
         }
         setLoading(false);
@@ -129,9 +137,13 @@ const SubCategoria = () => {
   const handleCollapseOpen = (key, subCategoria = null) => {
     setActiveKey(key);
     setCurrentSubCategoria(subCategoria);
+    setSelectedFileName('Seleccione');
+    setSelectedFileName2('Seleccione');
+    setSelectedFileName3('Seleccione');
     setShowTable(false);
     if (subCategoria) {
       form.setFieldsValue(subCategoria);
+      
     } else {
       form.resetFields();
     }
@@ -148,7 +160,7 @@ const SubCategoria = () => {
     try {
       const values = await form.validateFields();
       const date = new Date().toISOString();
-
+      console.log("Valores del formulario:", values);
       if (currentSubCategoria) {
         // Editar
         const updatedSubCategoria = {
@@ -163,9 +175,16 @@ const SubCategoria = () => {
         // Nuevo
         const newSubCategoria = {
           ...values,
-          subc_FechaCreacion: date,
+          pena_ArchivoRTN: selectedFileName,
+          pena_ArchivoDNI: selectedFileName2,
+          pena_ArchivoNumeroRecibo: selectedFileName3,
+
+          pena_NombreArchRTN: selectedFileName, 
+          pena_NombreArchDNI: selectedFileName2,
+          pena_NombreArchRecibo: selectedFileName3,
+          pena_FechaCreacion: date,
           usua_UsuarioCreacion: 1,
-          subc_Estado: true
+          
         };
         await insertar(newSubCategoria);
         notification.success({ message: 'Operación realizada correctamente' });
@@ -220,6 +239,60 @@ const SubCategoria = () => {
         }
       },
     });
+  };
+
+   const handleImageUpload = async ({ file }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    setSelectedFileName(file.name); // Update the state with the selected file name
+    try {
+      const response = await axios.post('https://localhost:44380/api/PersonaNatural/Archivo', formData, {
+        headers: {
+          'XApiKey': '4b567cb1c6b24b51ab55248f8e66e5cc',
+          'accept': '/',
+        },
+      });
+      // setImageUrl(response.data.data.url);
+      notification.success({ message: 'Imagen subida correctamente' });
+    } catch (error) {
+      notification.error({ message: 'Error al subir la imagen', description: 'Asegúrese que sea un Formato Valido' });
+    }
+  };
+
+  const handleImageUpload2 = async ({ file }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    setSelectedFileName2(file.name); // Update the state with the selected file name
+    try {
+      const response = await axios.post('https://localhost:44380/api/PersonaNatural/Archivo', formData, {
+        headers: {
+          'XApiKey': '4b567cb1c6b24b51ab55248f8e66e5cc',
+          'accept': '/',
+        },
+      });
+      // setImageUrl(response.data.data.url);
+      notification.success({ message: 'Imagen subida correctamente' });
+    } catch (error) {
+      notification.error({ message: 'Error al subir la imagen', description: 'Asegúrese que sea un Formato Valido' });
+    }
+  };
+
+  const handleImageUpload3 = async ({ file }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    setSelectedFileName3(file.name); // Update the state with the selected file name
+    try {
+      const response = await axios.post('https://localhost:44380/api/PersonaNatural/Archivo', formData, {
+        headers: {
+          'XApiKey': '4b567cb1c6b24b51ab55248f8e66e5cc',
+          'accept': '/',
+        },
+      });
+      // setImageUrl(response.data.data.url);
+      notification.success({ message: 'Imagen subida correctamente' });
+    } catch (error) {
+      notification.error({ message: 'Error al subir la imagen', description: 'Asegúrese que sea un Formato Valido' });
+    }
   };
 
   const handleSearchByDNI = (value) => {
@@ -337,183 +410,7 @@ const SubCategoria = () => {
     },
   ];
 
-  const steps = [
-    {
-      title: '',
-      content: (
-        <Row gutter={24}>
-          <Col span={12}>
-            <Form.Item name="" label="Persona RTN">
-              <Search placeholder="Buscar..." onSearch={handleSearchByDNI} enterButton />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="pers_Id" label="Persona" rules={[{ required: true, message: 'Por favor, seleccione la persona' }]}>
-              <Select
-                showSearch
-                placeholder="Seleccione"
-                optionFilterProp="children"
-                onChange={(value) => form.setFieldsValue({ pers_Id: value })}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-              >
-                {getPersonas.map((person) => (
-                  <Option key={person.pers_Id} value={person.pers_Id}>
-                    {person.pers_Nombre}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'Por favor, ingrese el RTN' }]}>
-            <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_NombreArchRTN" label="Archivo RTN" rules={[{ required: true, message: 'Por favor, ingrese el archivo RTN' }]}>
-          <Upload {...props}>
-             <Button>
-               <UploadOutlined /> Upload
-            </Button>
-          </Upload>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
-            <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_NombreArchDNI" label="Archivo DNI" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
-          <Upload {...props}>
-             <Button>
-               <UploadOutlined /> Upload
-            </Button>
-          </Upload>
-            </Form.Item>
-          </Col>
-      
-
-          <Col span={12}>
-          <Form.Item name="pena_NumeroRecibo" label="Numero Recibo" rules={[{ required: true, message: 'Por favor, ingrese el numero de recibo' }]}>
-            <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_NombreArchRecibo" label="Archivo Num. Recibio" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
-          <Upload {...props}>
-             <Button>
-               <UploadOutlined /> Upload
-            </Button>
-          </Upload>
-            </Form.Item>
-          </Col>
-        </Row>
-     
-      ),
-    },
-    {
-      title: '',
-      content: (
-        <Row gutter={24}>
-           <Col span={12}>
-            <Form.Item name="pvin_Id" label="Departamento">
-              <Select
-                showSearch
-                placeholder="Seleccione"
-                optionFilterProp="children"
-                onChange={(value) => 
-                  form.setFieldsValue({ pvin_Id: value })
-                }
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-              >
-                {getprovincias.map((prov) => (
-                  <Option key={prov.pvin_Id} value={prov.pvin_Id}>
-                    {prov.pvin_Nombre}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'Por favor, ingrese la ciudad' }]}>
-              <Select
-                showSearch
-                placeholder="Seleccione"
-                optionFilterProp="children"
-                onChange={(value) => 
-                  form.setFieldsValue({ ciud_Id: value })
-                }
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-              >
-                {getciudades.map((ciudad) => (
-                  <Option key={ciudad.ciud_Id} value={ciudad.ciud_Id}>
-                    {ciudad.ciud_Nombre}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={24}>
-          <Form.Item name="pena_DireccionExacta" label="Direccion Exacta" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
-          <TextArea rows={1}/>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_TelefonoFijo" label="Telefono Fijo" rules={[{ required: true, message: 'Por favor, ingrese el telefono fijo' }]}>
-           <Input   defaultValue="+504" />
-    
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-          <Form.Item name="pena_TelefonoCelular" label="Telefono Celular" rules={[{ required: true, message: 'Por favor, ingrese el telefono celular' }]}>
-          <Input   defaultValue="+504" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-           <Form.Item name="pena_CorreoElectronico" label="Correo Electronico" rules={[{ required: true, message: 'Por favor, ingrese el correo electronico' }]}>
-     
-            <Input type='Email'/>
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-          </Col>
-          <Col span={6}>
-            <Form.Item name="" label=" " >
-            <Button type="primary">
-            Enviar Verificacion
-            </Button> 
-            </Form.Item>
-     
-          </Col>
-          <Col span={2}>
-          </Col>
-          <Col span={12}>
-           <Form.Item name="pena_CorreoAlternativo" label="Correo Alternativo">
-            <Input type='email'/>
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-          </Col>
-          <Col span={6}>
-            <Form.Item name="" label=" " >
-            <Button type="primary">
-            Enviar Verificacion
-            </Button> 
-            </Form.Item>
-     
-          </Col>
-        </Row>
-      ),
-    },
-  
-  ];
+ 
 
   return (
     <Card>
@@ -533,11 +430,8 @@ const SubCategoria = () => {
             <Table
               columns={columns}
               dataSource={filteredData}
-              rowKey="subc_Id"
-              expandable={{
-                expandedRowRender: record => <p>Categoría: {record.cate_Descripcion}</p>,
-                rowExpandable: record => record.cate_Id !== null,
-              }}    
+              rowKey="pena_Id"
+                 
             />
           </div>
         </>
@@ -583,36 +477,189 @@ const SubCategoria = () => {
                 <Button icon={<CaretLeftFilled />} type="primary" danger onClick={handleCollapseClose} style={{ marginLeft: 8 }}>Volver</Button>
               </>
             ) : (
-              <>
-                <Steps current={currentStep}>
-                  {steps.map(item => (
-                    <Step key={item.title} title={item.title} />
-                  ))}
-                </Steps>
-                <Form form={form} layout="vertical" className="ant-advanced-search-form" style={{ marginTop: 16 }}>
-                  {steps[currentStep].content}
-                  <div className="steps-action">
-                    {currentStep < steps.length - 1 && (
-                      <Button type="primary" onClick={() => next()}>
-                        Siguiente
-                      </Button>
-                    )}
-                    {currentStep === steps.length - 1 && (
-                      <Button type="primary" onClick={handleSubmit}>
-                        Guardar
-                      </Button>
-                    )}
-                    {currentStep > 0 && (
-                      <Button style={{ marginLeft: 8 }} onClick={() => prev()}>
-                        Anterior
-                      </Button>
-                    )}
-                    <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>
-                      Volver
-                    </Button>
-                  </div>
-                </Form>
-              </>
+              <Form form={form} layout="vertical" className="ant-advanced-search-form">
+              <Row gutter={24}>
+                <Col span={12}>
+                  <Form.Item name="busqueda" label="Persona RTN">
+                  <Search placeholder="Buscar..." onSearch={handleSearchByDNI} enterButton />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="pers_Id" label="Persona" rules={[{ required: true, message: 'Por favor, seleccione la persona' }]}>
+                    <Select
+                      showSearch
+                      placeholder="Seleccione"
+                      optionFilterProp="children"
+                      onChange={onChange}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                      onSearch={onSearch}
+                      filterOption={(input, option) =>
+                      option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                      }
+                    >
+                      {getPersonas.map((persona) => (
+                        
+                        <Option key={persona.pers_Id} value={persona.pers_Id}>
+                          {persona.pers_Nombre}
+                          
+                        </Option>
+                      ))}
+                       
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'Por favor, ingrese el RTN' }]}>
+                  <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_NombreArchRTN" label="Archivo RTN" rules={[{ required: true, message: 'Por favor, ingrese el archivo RTN' }]}>
+                <Upload
+                showUploadList={false}
+                customRequest={handleImageUpload}
+                >
+                   <Button icon={<UploadOutlined />}>{selectedFileName}</Button>
+                </Upload>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
+                  <Input type='text'/>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_NombreArchDNI" label="Archivo DNI" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+                <Upload
+                showUploadList={false}
+                customRequest={handleImageUpload2}
+                >
+                  <Button icon={<UploadOutlined />}>{selectedFileName2}</Button>
+                </Upload>
+                  </Form.Item>
+                </Col>
+            
+      
+                <Col span={12}>
+                <Form.Item name="pena_NumeroRecibo" label="Numero Recibo" rules={[{ required: true, message: 'Por favor, ingrese el numero de recibo' }]}>
+                  <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_NombreArchRecibo" label="Archivo Num. Recibio" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+                <Upload
+                showUploadList={false}
+                customRequest={handleImageUpload3}
+                >
+                 <Button icon={<UploadOutlined />}>{selectedFileName3}</Button>
+                </Upload>
+                  </Form.Item>
+                </Col>
+              </Row>
+      
+                <Row gutter={24}>
+                 <Col span={12}>
+                  <Form.Item name="pvin_Id" label="Departamento">
+                    <Select
+                      showSearch
+                      placeholder="Seleccione"
+                      optionFilterProp="children"
+                      onChange={(value) => 
+                        form.setFieldsValue({ pvin_Id: value })
+                      }
+                      filterOption={(input, option) =>
+                        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                      }
+                    >
+                      {getprovincias.map((prov) => (
+                        <Option key={prov.pvin_Id} value={prov.pvin_Id}>
+                          {prov.pvin_Nombre}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'Por favor, ingrese la ciudad' }]}>
+                    <Select
+                      showSearch
+                      placeholder="Seleccione"
+                      optionFilterProp="children"
+                      onChange={(value) => 
+                        form.setFieldsValue({ ciud_Id: value })
+                      }
+                      filterOption={(input, option) =>
+                        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                      }
+                    >
+                      {getciudades.map((ciudad) => (
+                        <Option key={ciudad.ciud_Id} value={ciudad.ciud_Id}>
+                          {ciudad.ciud_Nombre}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                <Form.Item name="pena_DireccionExacta" label="Direccion Exacta" rules={[{ required: true, message: 'Por favor, ingrese el archivo DNI' }]}>
+                <TextArea rows={1}/>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_TelefonoFijo" label="Telefono Fijo" rules={[{ required: true, message: 'Por favor, ingrese el telefono fijo' }]}>
+                 <Input   defaultValue="+504 " />
+          
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_TelefonoCelular" label="Telefono Celular" rules={[{ required: true, message: 'Por favor, ingrese el telefono celular' }]}>
+                <Input   defaultValue="+504 " />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                 <Form.Item name="pena_CorreoElectronico" label="Correo Electronico" rules={[{ required: true, message: 'Por favor, ingrese el correo electronico' }]}>
+           
+                  <Input type='Email'/>
+                  </Form.Item>
+                </Col>
+                <Col span={4}>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="" label=" " >
+                  <Button type="primary">
+                  Enviar Verificacion
+                  </Button> 
+                  </Form.Item>
+           
+                </Col>
+                <Col span={2}>
+                </Col>
+                <Col span={12}>
+                 <Form.Item name="pena_CorreoAlternativo" label="Correo Alternativo">
+                  <Input type='email'/>
+                  </Form.Item>
+                </Col>
+                <Col span={4}>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="" label=" " >
+                  <Button type="primary">
+                  Enviar Verificacion
+                  </Button> 
+                  </Form.Item>
+           
+                </Col>
+                <Col span={12}>
+                <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'Por favor, ingrese el DNI' }]}>
+                  <Input type='text'/>
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Button icon={<PlusCircleFilled />} type="primary" onClick={handleSubmit}>Guardar</Button>
+                <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>Volver</Button>
+              </Form>
+              
             )}
           </Panel>
         </Collapse>

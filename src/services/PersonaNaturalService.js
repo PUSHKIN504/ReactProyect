@@ -69,6 +69,19 @@ export const insertar = async (subcategoria) => {
   }
 };
 
+// export const subi = async (subcategoria) => {
+//   try {
+//     const response = await axiosInstance.post(`${API_URL}/Insertar`, subcategoria, {
+//       headers: {
+//         'Content-Type': 'application/json',
+//       }
+//     });
+//     return response.data;
+//   } catch (error) {
+//     throw error;
+//   }
+// };
+
 export const editar = async (subcategoria) => {
   try {
     const response = await axiosInstance.post(`${API_URL}/Editar`, subcategoria, {
