@@ -95,11 +95,15 @@ export const protectedRoutes = [
         component: React.lazy(() => import('Tarea3/PersonaNatural')),
     },
     {
-        key: 'apps.tarea3.DucaInde',
+        key: 'apps.tarea3.DucaIndex',
         path: `${APP_PREFIX_PATH}/DucaIndex`,
         component: React.lazy(() => import('Tarea3/DucaIndex')),
     },
-
+    {
+        key: 'apps.tarea3.DucaCreate',
+        path: `${APP_PREFIX_PATH}/DucaCreate`,
+        component: React.lazy(() => import('Tarea3/DucaCreate')),
+    },
 
 
 

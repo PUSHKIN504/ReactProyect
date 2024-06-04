@@ -375,7 +375,7 @@ function DucaIndex() {
                             type="primary"
                             icon={<PlusOutlined />}
                             style={{ borderRadius: '10px', backgroundColor: "#634A9E", color: "white" }}
-                            onClick={() => navigate("/PersonaNatural")}
+                            onClick={() => navigate("/app/DucaCreate")}
                         >
                             Nuevo
                         </Button>

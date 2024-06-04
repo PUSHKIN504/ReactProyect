@@ -156,6 +156,14 @@ const appsNavTree = [{
           breadcrumb: true,
           submenu: []
         },
+        {
+          key: 'apss-tarea3-DucaCreate',
+          path: `${APP_PREFIX_PATH}/DucaCreate`,
+          title: 'sidenav.apps.tarea3.DucaCreate',
+          icon: HddFilled,
+          breadcrumb: true,
+          submenu: []
+        },
       ]
     }
 
