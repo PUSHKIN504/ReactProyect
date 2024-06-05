@@ -38,6 +38,33 @@ export const getPerson = async () => {
       throw error;
     }
   };
+  export const getProvincias = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Provincias/Listar?pvin_EsAduana=false');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  export const getCiudades = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Ciudades/Listar?ciud_EsAduana=true');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  export const getCiudadesPorProvincia = async (id) => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Ciudades/CiudadesFiltradaPorProvincias?pvin_Id=' + id);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
 
 export const insertar = async (subcategoria) => {
   try {
@@ -46,11 +73,30 @@ export const insertar = async (subcategoria) => {
         'Content-Type': 'application/json',
       }
     });
-    return response.data;
+
+      if (response.data && response.data.success && response.data.data && response.data.data.messageStatus) {
+        return { success: true, data: response.data }; 
+      } else {
+        throw new Error('Error');
+      }
+    // return response.data;
   } catch (error) {
     throw error;
   }
 };
+
+// export const subi = async (subcategoria) => {
+//   try {
+//     const response = await axiosInstance.post(`${API_URL}/Insertar`, subcategoria, {
+//       headers: {
+//         'Content-Type': 'application/json',
+//       }
+//     });
+//     return response.data;
+//   } catch (error) {
+//     throw error;
+//   }
+// };
 
 export const editar = async (subcategoria) => {
   try {
@@ -65,9 +111,9 @@ export const editar = async (subcategoria) => {
   }
 };
 
-export const eliminar = async (talla) => {
+export const finalizar = async (talla) => {
   try {
-    const response = await axiosInstance.post(`${API_URL}/Eliminar`, talla, {
+    const response = await axiosInstance.post(`${API_URL}/Finalizar`, talla, {
       headers: {
         'Content-Type': 'application/json',
       }

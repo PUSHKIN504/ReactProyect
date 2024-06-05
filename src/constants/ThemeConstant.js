@@ -18,7 +18,7 @@ export const LAYOUT_CONTENT_GUTTER = 25;
 export const LAYOUT_CONTENT_GUTTER_SM = 15;
 export const SIDE_NAV_DARK_BG_COLOR = '#001529'
 
-export const BLUE_BASE= '#26E80F';
+export const BLUE_BASE= '#3e79f7';
 export const PURPLE_BASE= '#a461d8';
 export const CYAN_BASE= '#04d182';
 export const GREEN_BASE= '#21B573';

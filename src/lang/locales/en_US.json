@@ -11,7 +11,11 @@
 
 	"sidenav.apps.tarea3": "Tarea 3",
 	"sidenav.apps.tarea3.PersonaNatural": "Persona Natural",
-	"sidenav.apps.tarea3.Duca": "Duca",
+	"sidenav.apps.tarea3.DucaIndex": "Duca",
+	"sidenav.apps.tarea3.DucaCreate": "Duca Crear",
+
+
+	
 
 
 	"sidenav.components.dataDisplay": "Data Display",

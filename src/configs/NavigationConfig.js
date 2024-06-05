@@ -141,7 +141,7 @@ const appsNavTree = [{
       breadcrumb: true,
       submenu: [
         {
-          key: 'apss-tarea23-PersonaNatura',
+          key: 'apss-tarea3-PersonaNatura',
           path: `${APP_PREFIX_PATH}/PersonaNatural`,
           title: 'sidenav.apps.tarea3.PersonaNatural',
           icon: SmileFilled,
@@ -149,9 +149,17 @@ const appsNavTree = [{
           submenu: []
         },
         {
-          key: 'apss-tarea3-Duca',
-          path: `${APP_PREFIX_PATH}/FormaPago`,
-          title: 'sidenav.apps.tarea3.Duca',
+          key: 'apss-tarea3-DucaInde',
+          path: `${APP_PREFIX_PATH}/DucaIndex`,
+          title: 'sidenav.apps.tarea3.DucaIndex',
+          icon: HddFilled,
+          breadcrumb: true,
+          submenu: []
+        },
+        {
+          key: 'apss-tarea3-DucaCreate',
+          path: `${APP_PREFIX_PATH}/DucaCreate`,
+          title: 'sidenav.apps.tarea3.DucaCreate',
           icon: HddFilled,
           breadcrumb: true,
           submenu: []
