@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form,Modal, Input, DatePicker, Select, Button, Tabs, Row, Col, Checkbox,Table } from 'antd';
+import { Form,Modal, Input, DatePicker, Select, Button, Tabs, Row,Collapse, Col,Divider, Checkbox,Table } from 'antd';
 import  { useState,useEffect } from 'react';
 import { useNavigate  } from 'react-router-dom';
 import axios from 'axios';
@@ -45,7 +45,7 @@ const [modalVisible, setModalVisible] = useState(false);
 const [dataLugarDesembarque, setdataLugarDesembarque] = useState([]);
 const [LugarDesembarque, setLugarDesembarque] = useState([]);
 const [TextLugarDesembarque, setTextLugarDesembarque] = useState("");
-
+const [collapseConductor, setCollapseConductor] = useState(false);
 const [SearchTextLugarDesembarque, setSearchTextLugarDesembarque] = useState("");
 
 function onChange(value) {
@@ -1079,283 +1079,344 @@ const abrirbusqueda = () => {
         </Form>
       </TabPane>
 
-      <Tabs.TabPane tab="Insertar Tab 2" key="3">
-        <Form
-          form={form2}
-          layout="vertical"
-          onFinish={onFinishTab2}
-        >
+      <TabPane tab="Declarante" key="3">
+        <Form form={form} onFinish={onFinishTab2}>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
+              <Divider orientation="left">Declarante</Divider>
+            </Col>
+            <Col span={8}>
               <Form.Item
-                name="duca_Id"
-                label="DUCA ID"
-                rules={[{ required: true, message: 'Please input DUCA ID!' }]}
+                label="Código"
+                name="Codigo_Declarante"
+                rules={[{ required: true, message: 'Please enter the Código' }]}
+              >
+                <Input
+                  maxLength={15}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="No. Identificación"
+                name="NoIdentificacion_Declarante"
+                rules={[{ required: true, message: 'Please enter the No. Identificación' }]}
+              >
+                <Input
+                  maxLength={17}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Nombre o Razón Social"
+                name="NombreRazonSocial_Declarante"
+                rules={[{ required: true, message: 'Please enter the Nombre o Razón Social' }]}
               >
                 <Input />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
-                name="duca_Codigo_Declarante"
-                label="Codigo Declarante"
-                rules={[{ required: true, message: 'Please input Codigo Declarante!' }]}
+                label="Domicilio Fiscal"
+                name="DomicilioFiscal_Declarante"
+                rules={[{ required: true, message: 'Please enter the Domicilio Fiscal' }]}
               >
                 <Input />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
+              <Divider orientation="left">Transportista</Divider>
+            </Col>
+            <Col span={8}>
               <Form.Item
-                name="duca_Numero_Id_Declarante"
-                label="Numero ID Declarante"
-                rules={[{ required: true, message: 'Please input Numero ID Declarante!' }]}
+                label="Código"
+                name="Codigo"
+                rules={[{ required: true, message: 'Please enter the Código' }]}
+              >
+                <Input
+                  maxLength={5}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Nombre"
+                name="Nombre"
+                rules={[{ required: true, message: 'Please enter the Nombre' }]}
               >
                 <Input />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item
-                name="duca_NombreSocial_Declarante"
-                label="Nombre Social Declarante"
-                rules={[{ required: true, message: 'Please input Nombre Social Declarante!' }]}
+                label="Modo de Transporte"
+                name="ModoTransporte"
+                rules={[{ required: true, message: 'Please select the Modo de Transporte' }]}
               >
-                <Input />
+                <Select
+                  showSearch
+                  placeholder="Select a Modo de Transporte"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {/* {ModosTransporte.map((modo) => (
+                    <Option key={modo.value} value={modo.value}>
+                      {modo.label}
+                    </Option>
+                  ))} */}
+                </Select>
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="duca_DomicilioFiscal_Declarante"
-                label="Domicilio Fiscal Declarante"
-                rules={[{ required: true, message: 'Please input Domicilio Fiscal Declarante!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="duca_Codigo_Transportista"
-                label="Codigo Transportista"
-                rules={[{ required: true, message: 'Please input Codigo Transportista!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Checkbox
-            checked={showTransportistaFields}
-            onChange={(e) => setShowTransportistaFields(e.target.checked)}
-          >
-            Agregar informacion del transportista
+        <Col span={24}>
+          <Checkbox onChange={(e) => setCollapseConductor(e.target.checked)}>
+            ¿Desea llenar los campos de Conductor?
           </Checkbox>
-          {showTransportistaFields && (
-            <>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="duca_Transportista_Nombre"
-                    label="Transportista Nombre"
-                    rules={[{ required: true, message: 'Please input Transportista Nombre!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="motr_Id"
-                    label="MOTR ID"
-                    rules={[{ required: true, message: 'Please input MOTR ID!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="cont_NoIdentificacion"
-                    label="No Identificacion"
-                    rules={[{ required: true, message: 'Please input No Identificacion!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="cont_Licencia"
-                    label="Licencia"
-                    rules={[{ required: true, message: 'Please input Licencia!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="pais_IdExpedicion"
-                    label="Pais Expedicion"
-                    rules={[{ required: true, message: 'Please input Pais Expedicion!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="cont_Nombre"
-                    label="Nombre"
-                    rules={[{ required: true, message: 'Please input Nombre!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="cont_Apellido"
-                    label="Apellido"
-                    rules={[{ required: true, message: 'Please input Apellido!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="pais_Id"
-                    label="Pais ID"
-                    rules={[{ required: true, message: 'Please input Pais ID!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="marca_Id"
-                    label="Marca ID"
-                    rules={[{ required: true, message: 'Please input Marca ID!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_IdUnidadTransporte"
-                    label="Unidad Transporte"
-                    rules={[{ required: true, message: 'Please input Unidad Transporte!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_Chasis"
-                    label="Chasis"
-                    rules={[{ required: true, message: 'Please input Chasis!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_Remolque"
-                    label="Remolque"
-                    rules={[{ required: true, message: 'Please input Remolque!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_CantCarga"
-                    label="Cantidad Carga"
-                    rules={[{ required: true, message: 'Please input Cantidad Carga!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_NumDispositivoSeguridad"
-                    label="Num Dispositivo Seguridad"
-                    rules={[{ required: true, message: 'Please input Num Dispositivo Seguridad!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_Equipamiento"
-                    label="Equipamiento"
-                    rules={[{ required: true, message: 'Please input Equipamiento!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_TamanioEquipamiento"
-                    label="Tamaño Equipamiento"
-                    rules={[{ required: true, message: 'Please input Tamaño Equipamiento!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_TipoCarga"
-                    label="Tipo Carga"
-                    rules={[{ required: true, message: 'Please input Tipo Carga!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_IdContenedor"
-                    label="ID Contenedor"
-                    rules={[{ required: true, message: 'Please input ID Contenedor!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="usua_UsuarioCreacion"
-                    label="Usuario Creacion"
-                    rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="tran_FechaCreacion"
-                    label="Fecha Creacion"
-                    rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}
-                  >
-                    <DatePicker style={{ width: '100%' }} />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </>
-          )}
-          <Form.Item>
+        </Col>
+      </Row>
+      <Collapse activeKey={collapseConductor ? '1' : ''}>
+        <Collapse.Panel  key="1">
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                label="No. Identificación"
+                name="NoIdentificador"
+                rules={[{ required: true, message: 'Please enter the No. Identificación' }]}
+              >
+                <Input
+                  maxLength={15}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="No. Licencia de Conducir"
+                name="NoLicenciaConducir"
+                rules={[{ required: true, message: 'Please enter the No. Licencia de Conducir' }]}
+              >
+                <Input
+                  maxLength={15}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="País Expedición"
+                name="PaisExpedicion"
+                rules={[{ required: true, message: 'Please select the País Expedición' }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select a País Expedición"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {Paises.map((pais) => (
+                    <Option key={pais.value} value={pais.value}>
+                      {pais.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Nombres"
+                name="Nombres"
+                rules={[{ required: true, message: 'Please enter the Nombres' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Apellidos"
+                name="Apellidos"
+                rules={[{ required: true, message: 'Please enter the Apellidos' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Id Unidad Transporte"
+                name="IdUnidadTransporte"
+                rules={[{ required: true, message: 'Please enter the Id Unidad Transporte' }]}
+              >
+                <Input
+                  maxLength={15}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="País de Registro"
+                name="PaisRegistro"
+                rules={[{ required: true, message: 'Please select the País de Registro' }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select a País de Registro"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {Paises.map((pais) => (
+                    <Option key={pais.value} value={pais.value}>
+                      {pais.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Marca"
+                name="Marca"
+                rules={[{ required: true, message: 'Please select the Marca' }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select a Marca"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {/* {Marcas.map((marca) => (
+                    <Option key={marca.value} value={marca.value}>
+                      {marca.label}
+                    </Option>
+                  ))} */}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Chasis / Vin"
+                name="ChasisVin"
+                rules={[{ required: true, message: 'Please enter the Chasis / Vin' }]}
+              >
+                <Input
+                  maxLength={17}
+                  style={{ textTransform: 'uppercase' }}
+                  onKeyPress={(e) => {
+                    if (!/[A-Za-z0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Identificación del Remolque"
+                name="IdentificacionRemolque"
+                rules={[{ required: true, message: 'Please enter the Identificación del Remolque' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Cantidad de Unidades Carga"
+                name="CantidadUnidadesCarga"
+                rules={[{ required: true, message: 'Please enter the Cantidad de Unidades Carga' }]}
+              >
+                <Input
+                  maxLength={5}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Número de Dispositivo Seguridad"
+                name="NumeroDispositivo"
+                rules={[{ required: true, message: 'Please enter the Número de Dispositivo Seguridad' }]}
+              >
+                <Input
+                  maxLength={3}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Equipamiento"
+                name="Equipamiento"
+                rules={[{ required: true, message: 'Please enter the Equipamiento' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Tamaño del equipamiento"
+                name="TamanioEquipamiento"
+                rules={[{ required: true, message: 'Please enter the Tamaño del equipamiento' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Tipo de Carga"
+                name="TipoCarga"
+                rules={[{ required: true, message: 'Please enter the Tipo de Carga' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Número o Números de Identificación"
+                name="NIdentificacionContenedor"
+                rules={[{ required: true, message: 'Please enter the Número o Números de Identificación' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Collapse.Panel>
+      </Collapse>
+          <Row gutter={16}>
+            <Col span={24} style={{ textAlign: 'right' }}>
             <Button
             type="primary"
             htmlType="submit"
@@ -1363,9 +1424,16 @@ const abrirbusqueda = () => {
             >
             Submit
             </Button>
-          </Form.Item>
+              <Button
+                // onClick={DialogCancelarDuca}
+                style={{ marginLeft: 8 }}
+              >
+                Cancelar
+              </Button>
+            </Col>
+          </Row>
         </Form>
-      </Tabs.TabPane>
+      </TabPane>
 
 
       <Tabs.TabPane tab="Insertar Tab 3" key="4">
