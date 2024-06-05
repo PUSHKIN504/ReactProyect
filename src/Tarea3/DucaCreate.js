@@ -35,6 +35,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
     const [Paisesprocedencia, setPaisesProcedencia] = useState([]);
     const [getRegimenesAduaneros, setRegimenesAduaneros] = useState([]);
     const [values1, setValues1] = useState({});
+    const [values2, setValues2] = useState({});
     const [getaduanas, setAduanas] = useState([]);
     const [idsDevasContieneDuca, setidsDevasContieneDuca] = useState([]);
   const [filasDevas, setFilasDevas] = React.useState(10);
@@ -43,11 +44,28 @@ const UDP_tbDuca_InsertarTab1 = () => {
   const [showTransportistaFields, setShowTransportistaFields] = useState(false);
 const [modalVisible, setModalVisible] = useState(false);
 const [dataLugarDesembarque, setdataLugarDesembarque] = useState([]);
-const [LugarDesembarque, setLugarDesembarque] = useState([]);
+const [getLugarDesembarque, setLugarDesembarque] = useState([]);
 const [TextLugarDesembarque, setTextLugarDesembarque] = useState("");
 const [collapseConductor, setCollapseConductor] = useState(false);
 const [SearchTextLugarDesembarque, setSearchTextLugarDesembarque] = useState("");
-
+const [getmodosTransporte, setModosTransporte] = useState([]);
+const [loadingGuardarTab2, setLoadingGuardarTab2] = useState(false);
+const [isValid2, setIsValid2] = useState(true);
+const [datosTab2, setDatosTab2] = useState({});
+async function ModosTransporte() {
+  try {
+    const response = await axiosInstance.get("https://localhost:44380/api/ModoTransporte/Listar"); //copiar url despues del endpoint
+    const data = response.data.data.map((item) => {
+      return {
+        value: item.motr_Id,
+        label: item.motr_Descripcion,
+      };
+    });
+    setModosTransporte(data) ;
+  } catch (error) {
+    
+  }
+}
 function onChange(value) {
     console.log(`selected ${value}`);
   }
@@ -232,6 +250,7 @@ const handleChangePageSize = (value) => {
     ];
 
     useEffect(() => {
+        ModosTransporte();
         CargarDatospaises();
         RegimenesAduaneros();
         aduanas();
@@ -712,16 +731,50 @@ const abrirbusqueda = () => {
     const onClose = () => {
         setModalVisible(false);
     };
-  const onFinishTab2 = (values) => {
+  const onFinishTab2 = async (values) => {
     console.log('Tab 2 values:', values);
-    // Handle form submission for Tab 2
-    // axios.post('your_api_endpoint_tab2', values)
-    //   .then(response => {
-    //     message.success('Data submitted successfully for Tab 2');
-    //   })
-    //   .catch(error => {
-    //     message.error('Submission failed for Tab 2');
-    //   });
+    try {
+      
+        setLoadingGuardarTab2(true);
+        // if (collapseConductor && values.duca_Conductor_Id > 0) {
+        //   const respuesta =axiosInstance.post(`${API_URL}EditarPart1`, values, {
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+        //   });
+        //   if (respuesta.data.data !== null) {
+        //     if (respuesta.data.data.messageStatus === "1") {
+        //       setLoadingGuardarTab2(false);
+        //       validacion(4);
+        //     } else {
+        //       console.log("error");
+        //     }
+        //   }
+        // } else {
+          const respuesta = await axiosInstance.post(`${API_URL}InsertPart2`, values, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          if (respuesta.data.data !== null) {
+            if (respuesta.data.data.codeStatus === 1) {
+              setLoadingGuardarTab2(false);
+              setValues2((prev) => ({
+                ...prev,
+                duca_Conductor_Id: parseInt(respuesta.data.data.messageStatus)
+              }));
+              setActiveTab(4);
+              console.log("guardado con exito");
+            } else {
+                console.log("error")
+            }
+          }
+        // }
+      
+    } catch (error) {
+      console.log("Error. Ocurrió un error al intentar realizar la operación");
+      console.error(error);
+    }
   };
 
   const onFinishTab3 = (values) => {
@@ -966,12 +1019,12 @@ const abrirbusqueda = () => {
                         <Select
                             showSearch
                             placeholder="Select a place"
-                            optionFilterProp="children"LugarDesembarque
+                            optionFilterProp="children"
                             filterOption={(input, option) =>
                                 option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                             }
                         >
-                           {LugarDesembarque.map((pais) => (
+                           {getLugarDesembarque.map((pais) => (
                               <Option key={pais.value} value={pais.value}>
                                 {pais.label}
                               </Option>
@@ -1176,11 +1229,11 @@ const abrirbusqueda = () => {
                     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }
                 >
-                  {/* {ModosTransporte.map((modo) => (
+                  {getmodosTransporte.map((modo) => (
                     <Option key={modo.value} value={modo.value}>
                       {modo.label}
                     </Option>
-                  ))} */}
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -1192,7 +1245,7 @@ const abrirbusqueda = () => {
           </Checkbox>
         </Col>
       </Row>
-      <Collapse activeKey={collapseConductor ? '1' : ''}>
+      {collapseConductor && (<Collapse activeKey={collapseConductor ? '1' : ''}>
         <Collapse.Panel  key="1">
           <Row gutter={16}>
             <Col span={8}>
@@ -1414,7 +1467,7 @@ const abrirbusqueda = () => {
             </Col>
           </Row>
         </Collapse.Panel>
-      </Collapse>
+      </Collapse>)}
           <Row gutter={16}>
             <Col span={24} style={{ textAlign: 'right' }}>
             <Button
