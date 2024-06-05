@@ -56,6 +56,33 @@ export const getPerson = async () => {
     }
   };
 
+  export const getOficinas = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Oficinas/Listar');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  
+  export const getOficios = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/Oficio_Profesiones/Listar');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+  export const getEsCiv = async () => {
+    try {
+      const response = await axiosInstance.get('https://localhost:44380/api/EstadosCiviles/Listar?escv_EsAduana=true');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   export const getCiudadesPorProvincia = async (id) => {
     try {
       const response = await axiosInstance.get('https://localhost:44380/api/Ciudades/CiudadesFiltradaPorProvincias?pvin_Id=' + id);
@@ -69,6 +96,26 @@ export const getPerson = async () => {
 export const insertar = async (subcategoria) => {
   try {
     const response = await axiosInstance.post(`${API_URL}/Insertar`, subcategoria, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+      if (response.data && response.data.success && response.data.data && response.data.data.messageStatus) {
+        return { success: true, data: response.data }; 
+      } else {
+        throw new Error('Error');
+      }
+    // return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+export const insertarPersona = async (subcategoria) => {
+  try {
+    const response = await axiosInstance.post('https://localhost:44380/api/Personas/Insertar', subcategoria, {
       headers: {
         'Content-Type': 'application/json',
       }
