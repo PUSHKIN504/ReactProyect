@@ -33,6 +33,7 @@ function onSearch(val) {
   console.log('search:', val);
 }
 
+
 const SubCategoria = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -52,8 +53,8 @@ const SubCategoria = () => {
 
   const [ciudades, setCiudades] = useState([]);
 const [defaultCiudadId, setdefaultCiudadId] = useState('0');
-const [selectedCiudad, setSelectedCiudad] = useState(null);
-
+const [selectedCiudad, setSelectedCiudad] = useState(null
+);
     useEffect(() => {
     const fetchData = async () => {
       try {
@@ -73,6 +74,26 @@ const [selectedCiudad, setSelectedCiudad] = useState(null);
 
     fetchData();
   }, []);
+
+  function Index(){
+    const fetchData = async () => {
+      try {
+        const subCategorias = await get();
+        if (Array.isArray(subCategorias)) {
+          setData(subCategorias);
+          setFilteredData(subCategorias);
+        } else {
+          throw new Error('Data format is incorrect');
+        }
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
+  }
 
   useEffect(() => {
     const fetchPerson = async () => {
@@ -211,6 +232,7 @@ const [selectedCiudad, setSelectedCiudad] = useState(null);
               const response = await finalizar(deleteTalla);
               if (response.code === 200) {
                 notification.success({ message: 'Operacion realizada correctamente' });
+                Index();
                 handleCollapseClose();
               } else {
                 notification.error({ message: 'Operación no realizada' });
@@ -321,6 +343,7 @@ const [selectedCiudad, setSelectedCiudad] = useState(null);
 
           if (response.code === 200) {
             notification.success({ message: 'Operacion realizada correctamente' });
+            Index();
           } else {
             notification.error({ message: 'No se puede eliminar este registro' });
           }
@@ -411,14 +434,18 @@ const [selectedCiudad, setSelectedCiudad] = useState(null);
       align: 'center',
       render: (text, record) => (
         <Row>
-          <Button
-            icon={<EditFilled />}
-            onClick={() => handleCollapseOpen('edit', record)}
-            style={{ marginRight: 8, backgroundColor: 'orange' }}
-            type='primary'
-          >
-            Editar
-          </Button>
+          {!record.pena_Finalizado && (
+                                 
+             <Button
+             icon={<EditFilled />}
+             onClick={() => handleCollapseOpen('edit', record)}
+             style={{ marginRight: 8, backgroundColor: 'orange' }}
+             type='primary'
+           >
+           Editar
+          </Button> 
+        )}
+
           <Button
             icon={<EyeFilled />}
             onClick={() => handleCollapseOpen('details', record)}
@@ -427,15 +454,17 @@ const [selectedCiudad, setSelectedCiudad] = useState(null);
           >
             Detalles
           </Button>
-
-          <Button
+          {!record.pena_Finalizado && (
+            <Button
             icon={<CheckSquareFilled />}
             onClick={() => handleFinalizar(record)}
             danger
             type='primary'
-          >
+            >
             Finalizar
-          </Button>
+            </Button>
+          )}
+         
         </Row>
       ),
     },
