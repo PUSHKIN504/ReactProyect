@@ -1,3 +1,111 @@
+
+
+
+
+// <Tabs.TabPane tab="Insertar Tab 3" key="4">
+// <Form form={form3} layout="vertical" onFinish={onFinishTab3}>
+//   <Row gutter={16}>
+//     <Col span={12}>
+//       <Form.Item name="tido_Id" label="TIDO ID" rules={[{ required: true, message: 'Please input TIDO ID!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//     <Col span={12}>
+//       <Form.Item name="duca_Id" label="DUCA ID" rules={[{ required: true, message: 'Please input DUCA ID!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//   </Row>
+//   <Row gutter={16}>
+//     <Col span={12}>
+//       <Form.Item name="doso_NumeroDocumento" label="Numero Documento" rules={[{ required: true, message: 'Please input Numero Documento!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//     <Col span={12}>
+//       <Form.Item name="doso_FechaEmision" label="Fecha Emision" rules={[{ required: true, message: 'Please input Fecha Emision!' }]}>
+//         <DatePicker style={{ width: '100%' }} />
+//       </Form.Item>
+//     </Col>
+//   </Row>
+//   <Row gutter={16}>
+//     <Col span={12}>
+//       <Form.Item name="doso_FechaVencimiento" label="Fecha Vencimiento" rules={[{ required: true, message: 'Please input Fecha Vencimiento!' }]}>
+//         <DatePicker style={{ width: '100%' }} />
+//       </Form.Item>
+//     </Col>
+//     <Col span={12}>
+//       <Form.Item name="doso_PaisEmision" label="Pais Emision" rules={[{ required: true, message: 'Please input Pais Emision!' }]}>
+//         <Select>
+//           {/* Populate options dynamically */}
+//           <Option value="1">Pais 1</Option>
+//           <Option value="2">Pais 2</Option>
+//         </Select>
+//       </Form.Item>
+//     </Col>
+//   </Row>
+//   <Row gutter={16}>
+//     <Col span={12}>
+//       <Form.Item name="doso_LineaAplica" label="Linea Aplica" rules={[{ required: true, message: 'Please input Linea Aplica!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//     <Col span={12}>
+//       <Form.Item name="doso_EntiadEmitioDocumento" label="Entidad Emitio Documento" rules={[{ required: true, message: 'Please input Entidad Emitio Documento!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//   </Row>
+//   <Row gutter={16}>
+//     <Col span={12}>
+//       <Form.Item name="doso_Monto" label="Monto" rules={[{ required: true, message: 'Please input Monto!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//     <Col span={12}>
+//       <Form.Item name="usua_UsuarioCreacion" label="Usuario Creacion" rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}>
+//         <Input />
+//       </Form.Item>
+//     </Col>
+//   </Row>
+//   <Row gutter={16}>
+//     <Col span={12}>
+//       <Form.Item name="doso_FechaCreacion" label="Fecha Creacion" rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}>
+//         <DatePicker style={{ width: '100%' }} />
+//       </Form.Item>
+//     </Col>
+//   </Row>
+//   <Form.Item>
+//     <Button type="primary" htmlType="submit">
+//       Submit
+//     </Button>
+//   </Form.Item>
+// </Form>
+// </Tabs.TabPane>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <Card sx={{ minWidth: 275, margin: "40px" }}>
             <CardMedia
                 component="img"

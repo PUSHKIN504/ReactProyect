@@ -1,10 +1,13 @@
 import React from 'react';
-import { Form,Modal, Input, DatePicker, Select, Button, Tabs, Row,Collapse, Col,Divider, Checkbox,Table } from 'antd';
+import { Form,Modal, Input, DatePicker, Select, Button, Tabs, Row,Collapse, Col,Divider, Checkbox,Table,Space,Tooltip,MenuItem, Menu  } from 'antd';
 import  { useState,useEffect } from 'react';
 import { useNavigate  } from 'react-router-dom';
 import axios from 'axios';
-import { SearchOutlined,CheckOutlined   } from '@ant-design/icons';
+import { SearchOutlined,CheckOutlined,EditOutlined,InfoCircleOutlined,MoreOutlined ,DeleteOutlined   } from '@ant-design/icons';
 // import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+
+
 
 
 
@@ -21,12 +24,30 @@ const { Option } = Select;
 
 
 const UDP_tbDuca_InsertarTab1 = () => {
+  const [filasItems, setFilasItems] = useState(10);
+  const [searchTextItems, setSearchTextItems] = useState('');
+  const [searchTextItemsCompletados, setSearchTextItemsCompletados] = useState('');
+  const [completarItem, setCompletarItem] = useState(true);
+  const [Item_Id, setItem_Id] = useState(true);
+  const [ListadoItems, setListadoItems] = useState([]);
+  const [ListadoItemsFull, setListadoItemsFull] = useState([]);
+  const [isEditItem, setIsEditItem] = useState(false);
+  const [getisvalid, setisvalid] = useState(false);
+  const [filasItemsCompletados, setFilasItemsCompletados] = useState(10);
+  const [ListadoItemsCompletados, setListadoItemsCompletados] = useState([]);
+  const [collapseDocumentosSoporte, setCollapseDocumentosSoporte] = useState(false);
+  const [documentosSoporteList, setDocumentosSoporteList] = useState([]);
+    const [isEditDocumentoSoporte, setIsEditDocumentoSoporte] = useState(false);
+    const [anchorElDocumentos, setAnchorElDocumentos] = useState({});
+    const [tiposDocumentos, setTiposDocumentos] = useState([]);
+
   const navigate = useNavigate();
   const [selectedDevIds, setSelectedDevIds] = useState([]);
   const [form1] = Form.useForm();
   const [form] = Form.useForm();
   const [form2] = Form.useForm();
   const [form3] = Form.useForm();
+  const [form4] = Form.useForm();
   const [ListadoDucas, setListadoDucas] = useState([]);
   const [cargandoData, setCargandoData] = useState([]);
   const [activeTab, setActiveTab] = useState("1");
@@ -52,6 +73,7 @@ const [getmodosTransporte, setModosTransporte] = useState([]);
 const [loadingGuardarTab2, setLoadingGuardarTab2] = useState(false);
 const [isValid2, setIsValid2] = useState(true);
 const [datosTab2, setDatosTab2] = useState({});
+const [getducaid, setducaid] = useState({});
 async function ModosTransporte() {
   try {
     const response = await axiosInstance.get("https://localhost:44380/api/ModoTransporte/Listar"); //copiar url despues del endpoint
@@ -235,7 +257,7 @@ const handleChangePageSize = (value) => {
                           backgroundColor: '#634A9E',
                           color: 'white',
                       }}
-                      startIcon={<CheckOutlined >check</CheckOutlined >}
+                      icon={<CheckOutlined />}
                   >
                       Seleccionar
                   </Button>
@@ -254,6 +276,8 @@ const handleChangePageSize = (value) => {
         CargarDatospaises();
         RegimenesAduaneros();
         aduanas();
+        setListadoItems(ListadoItemsFull.filter(item => item.item_PesoBruto === null));
+        ListarItems();
     },[]);
 
   useEffect(() => {
@@ -261,10 +285,16 @@ const handleChangePageSize = (value) => {
         setPaisesProcedencia([Paises.find(item=>item.value===97)]);
         setValues1("PaisDestino", Paises.find(item=>item.value===97));
     }
+    
     // CargarDatospaises();    
     getListadoDucas();
     // ListarItems();
   }, [Paises]);
+  useEffect(() => {
+    setListadoItems(ListadoItemsFull.filter(item => item.item_PesoBruto === null));
+    setListadoItemsCompletados(ListadoItemsFull.filter(item => item.item_PesoBruto !== null));
+
+  }, [ListadoItemsFull, ListadoItems]);
   async function ListarDevasPorDuca() {
     try {
         const response = await axiosInstance.get(`${API_URL}ListaDevaNoDuca`);
@@ -427,9 +457,6 @@ const ToastWarningPersonalizado = (message) => {
 
 
 
-const ListarItems = () => {
-  // Your logic for listing items
-};
 
 const validacion = (step) => {
   // Your validation logic
@@ -453,11 +480,14 @@ async function LiberarDevasPorDucaId(){
   }
 }
 
-async function InsertarDevaPorDuca(deva_Id) {
+async function InsertarDevaPorDuca() {
   try {
+    let duca= parseInt(localStorage.getItem("duca_Id"));
       let datos = {
-          "duca_Id": parseInt(localStorage.getItem("duca_Id")),
-          "deva_Id": deva_Id,
+        
+
+          "duca_Id": duca,
+          "deva_Id": localStorage.getItem("deva"),
           "usua_UsuarioCreacion": 1,
           "dedu_FechaCreacion": new Date(),
       }
@@ -552,16 +582,9 @@ const GuardarDEVAS = async () => {
                           if (liberarDevasResponse.data.data.messageStatus === "1") {
 
                               let allCorrect = true;
-                              for (let index = 0; index < selectedDevIds.length; index++) {
-                                  const response2 = await InsertarDevaPorDuca(selectedDevIds[index]);
-
-                                  if (response2.data.data.messageStatus !== "1") {
-                                      allCorrect = false;
-                                  }
-                              }
+                              
 
                               if (allCorrect) {
-                                  ListarItems();
                                   setidsDevasContieneDuca(selectedDevIds);
                               }
                           }
@@ -572,16 +595,9 @@ const GuardarDEVAS = async () => {
 
                       if (liberarDevasResponse.data.data.messageStatus === "1") {
                           let allCorrect = true;
-                          for (let index = 0; index < selectedDevIds.length; index++) {
-                              const response2 = await InsertarDevaPorDuca(selectedDevIds[index]);
-
-                              if (response2.data.data.messageStatus !== "1") {
-                                  allCorrect = false;
-                              }
-                          }
+                         
 
                           if (allCorrect) {
-                              ListarItems();
                               setidsDevasContieneDuca(selectedDevIds);
                           }
                       }
@@ -590,9 +606,12 @@ const GuardarDEVAS = async () => {
                   }
               }
               console.log("esta ajuera" + selectedDevIds);
+              localStorage.setItem("deva", selectedDevIds);
+
               setidsDevasContieneDuca(selectedDevIds);
               setActiveTab("2");
               setLoadingGuardarDevas(false);
+              
               validacion(2);
           }
       } else {
@@ -713,45 +732,326 @@ const GuardarDEVAS = async () => {
   const onFinish = async (values) => {
     console.log("entro");
     try {
-      console.log('Tab 1 values:', values);
-      const response = await axiosInstance.post(`${API_URL}InsertPart1`, values, {
+      const response1 = await axiosInstance.post(`${API_URL}PreInsertar`, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      let idDuca = response1.data.data.messageStatus;
+      localStorage.setItem("duca_Id", String(idDuca));
+      console.log("id duca:", idDuca);
+      setducaid(idDuca);
+      InsertarDevaPorDuca();
+
+      // const response2 = await axiosInstance.post(InsertarDevaPorDuca,{
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      // });
+
+      // console.log( response2.data.data.messageStatus);
+      const values2 = {
+        duca_Id: idDuca,
+        duca_No_Duca: values.duca_No_Duca,
+        duca_No_Correlativo_Referencia: values.duca_No_Correlativo_Referencia,
+        duca_AduanaRegistro: values.duca_AduanaRegistro,
+        duca_AduanaDestino: parseInt(values.duca_AduanaDestino),
+        duca_Regimen_Aduanero: values.duca_Regimen_Aduanero,
+        duca_Modalidad: values.duca_Modalidad,
+        duca_Clase: values.duca_Clase,
+        duca_FechaVencimiento: values.duca_FechaVencimiento.toISOString(),
+        duca_Pais_Procedencia: values.duca_Pais_Procedencia,
+        duca_Pais_Destino: values.duca_Pais_Destino,
+        duca_Deposito_Aduanero: values.duca_Deposito_Aduanero,
+        duca_Lugar_Desembarque: values.duca_Lugar_Desembarque, // Ensure this matches the expected NVARCHAR(MAX) type
+        duca_Manifiesto: values.duca_Manifiesto,
+        duca_Titulo: values.duca_Titulo,
+        trli_Id: 2, // Adjust based on your logic
+        usua_UsuarioCreacion: 1,
+        duca_FechaCreacion: new Date().toISOString()
+      };
+      console.log('Tab 1 values:', values2);
+
+      const response = await axiosInstance.post(`${API_URL}InsertPart1`, values2, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      setActiveTab("3");
+
       return response.data;
     } catch (error) {
       console.error(error);
       throw error;
     }
   };
+  const handleClickDocumentos = (event, id) => {
+    setAnchorElDocumentos(prevState => ({
+        ...prevState,
+        [id]: event.currentTarget,
+    }));
+};
+
+const handleCloseDocumentos = (id) => {
+  setAnchorElDocumentos(prevState => ({
+      ...prevState,
+      [id]: null,
+  }));
+};
+const handleDeleteDocumentos = (id) => {
+  eliminarDocumentoSoporte(id);
+  handleCloseDocumentos(id);
+};
+
 const abrirbusqueda = () => {
         setModalVisible(true);
     };
     const onClose = () => {
         setModalVisible(false);
     };
-  const onFinishTab2 = async (values) => {
-    console.log('Tab 2 values:', values);
+    const handleChangeFilasItems = (event) => {
+      setFilasItems(event.target.value);
+  };
+  const handleSearchChangeItemsCompletados = (event) => {
+    setSearchTextItemsCompletados(event.target.value);
+}
+const handleSearchChangeItems = (event) => {
+  setSearchTextItems(event.target.value);
+}
+const columnsItems = [
+  {
+      title: 'No.',
+      dataIndex: 'id',
+      key: 'id',
+      sorter: (a, b) => a.id - b.id
+  },
+  {
+      title: 'Id Item',
+      dataIndex: 'item_Id',
+      key: 'item_Id',
+      sorter: (a, b) => a.item_Id - b.item_Id
+  },
+  {
+      title: 'País Origen',
+      dataIndex: 'nombrePaisOrigen',
+      key: 'nombrePaisOrigen',
+      sorter: (a, b) => a.nombrePaisOrigen.localeCompare(b.nombrePaisOrigen),
+  },
+  {
+      title: 'Cantidad',
+      dataIndex: 'item_Cantidad',
+      key: 'item_Cantidad',
+      sorter: (a, b) => a.item_Cantidad - b.item_Cantidad,
+  },
+  {
+      title: 'Clasificación Arancelaria',
+      dataIndex: 'item_ClasificacionArancelaria',
+      key: 'item_ClasificacionArancelaria',
+      sorter: (a, b) => a.item_ClasificacionArancelaria.localeCompare(b.item_ClasificacionArancelaria),
+  },
+  {
+    title: 'Acciones',
+    key: 'operationItems',
+    render: (params) => (
+      <div key={params.item_Id}>
+        <Space direction="horizontal" size="middle">
+          <Button
+            aria-controls={`menu-${params.item_Id}`}
+            aria-haspopup="true"
+            onClick={() => handleCompletarItem(params.item_Id)}
+            style={{
+              borderRadius: '10px',
+              backgroundColor: '#634A9E',
+              color: 'white',
+            }}
+            icon={<CheckOutlined />}
+          >
+            Completar Item
+          </Button>
+        </Space>
+      </div>
+    ),
+  },
+];
+async function ListarDevasxNoDuca() {
+  try {
+      const ducaId = parseInt(localStorage.getItem("duca_Id"));
+      const response = await axiosInstance.get(`https://localhost:44380/api/ItemsDEVAxDUCA/ListadoDevasPorducaId?duca_Id=${ducaId}`);
+      
+      const devas = response.data.data.map(element => element.deva_Id);
+
+      return devas;
+  } catch (error) {
+      console.error("Error fetching DEVA IDs:", error);
+      throw error;  // Rethrow the error if you want to handle it elsewhere
+  }
+}
+async function ListarFacturasPorDevaId(deva_Id) {
+  try {
+      const response = await axiosInstance.get(`https://localhost:44380/api/Facturas/Listar?deva_Id=${deva_Id}`);
+      
+      const facturas = response.data.data.map(element => element.fact_Id);
+
+      return facturas;
+  } catch (error) {
+      console.error("Error fetching factura IDs:", error);
+      throw error;  // Rethrow the error if you want to handle it elsewhere
+  }
+}
+async function ListarItemsPorfact_Id(fact_Id) {
+  try {
+      const response = await axiosInstance.get(`https://localhost:44380/api/Items/Listar?fact_Id=${fact_Id}`);
+      
+      return response.data.data;
+  } catch (error) {
+      console.error("Error fetching items by factura ID:", error);
+      throw error;  // Rethrow the error if you want to handle it elsewhere
+  }
+}
+const ListarItems = async () => {
+  if (getducaid) {
+    const devas = await ListarDevasxNoDuca();
+
+      let facturas = [];
+
+      for (let index = 0; index < devas.length; index++) {
+
+          const fact_devas = await ListarFacturasPorDevaId(devas[index]);
+
+          if (fact_devas.length > 0) {
+              fact_devas.forEach(element => {
+                  facturas.push(element);
+              })
+          }
+      }
+      console.log("coso");
+
+      let items = [];
+
+      for (let index = 0; index < facturas.length; index++) {
+          const item = await ListarItemsPorfact_Id(facturas[index]);
+          console.log(item);
+
+          if (item.length > 0) {
+              item.forEach(element => {
+                  items.push(element);
+              });
+          }
+      }
+      // setListadoItemsFull(items.map((item, index) => {
+      //     return {
+      //         id: index + 1,
+      //         item_Id: item.item_Id,
+      //         fact_Id: item.fact_Id,
+      //         item_Cantidad: item.item_Cantidad,
+      //         item_Cantidad_Bultos: item.item_Cantidad_Bultos,
+      //         item_ClaseBulto: item.item_ClaseBulto,
+      //         item_Acuerdo: item.item_Acuerdo,
+      //         item_PesoNeto: item.item_PesoNeto,
+      //         item_PesoBruto: item.item_PesoBruto,
+      //         unme_Id: item.unme_Id,
+      //         item_IdentificacionComercialMercancias: item.item_IdentificacionComercialMercancias,
+      //         item_CaracteristicasMercancias: item.item_CaracteristicasMercancias,
+      //         item_Marca: item.item_Marca,
+      //         item_Modelo: item.item_Modelo,
+      //         merc_Id: item.merc_Id,
+      //         pais_IdOrigenMercancia: item.pais_IdOrigenMercancia,
+      //         nombrePaisOrigen: item.nombrePaisOrigen,
+      //         item_ClasificacionArancelaria: item.item_ClasificacionArancelaria,
+      //         item_ValorUnitario: item.item_ValorUnitario,
+      //         item_GastosDeTransporte: item.item_GastosDeTransporte,
+      //         item_ValorTransaccion: item.item_ValorTransaccion,
+      //         item_Seguro: item.item_Seguro,
+      //         item_OtrosGastos: item.item_OtrosGastos,
+      //         item_ValorAduana: item.item_ValorAduana,
+      //         item_CuotaContingente: item.item_CuotaContingente,
+      //         item_ReglasAccesorias: item.item_ReglasAccesorias,
+      //         item_CriterioCertificarOrigen: item.item_CriterioCertificarOrigen,
+      //         usua_UsuarioCreacion: item.usua_UsuarioCreacion,
+      //         usuarioCreacionNombre: item.usuarioCreacionNombre,
+      //         item_FechaCreacion: item.item_FechaCreacion,
+      //         usua_UsuarioModificacion: item.usua_UsuarioModificacion,
+      //         usuarioModificacionNombre: item.usuarioModificacionNombre,
+      //         usua_UsuarioEliminacion: item.usua_UsuarioEliminacion,
+      //         item_FechaEliminacion: item.item_FechaEliminacion,
+      //         item_FechaModificacion: item.item_FechaModificacion,
+      //         item_Estado: item.item_Estado
+      //     }
+      // }));
+      setListadoItemsFull(items.map((item, index) => ({
+        key: index + 1, // Use key for unique identifier
+        ...item,
+      })));
+  }
+}
+const handleCompletarItem = (id) => {
+  setCompletarItem(false);
+  setItem_Id(id);
+  setValues3_Items("Item_Id", id);
+
+}
+const camposToFilterItems = ["id", "item_Id", "nombrePaisOrigen", "item_Cantidad", "item_ClasificacionArancelaria"];
+
+    const filteredRowsItems = ListadoItems.filter((row) => {
+        if (searchTextItems === "") {
+            return true; // Mostrar todas las filas si el buscador está vacío
+        }
+
+        for (const [key, value] of Object.entries(row)) {
+            if (camposToFilterItems.includes(key)) {
+                const formattedValue =
+                    typeof value === "number"
+                        ? value.toString()
+                        : value.toString().toLowerCase();
+                const formattedSearchText =
+                    typeof searchTextItems === "number"
+                        ? searchTextItems.toString()
+                        : searchTextItems.toLowerCase();
+                if (formattedValue.includes(formattedSearchText)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    );
+  const onFinishTab2 = async (values3) => {
     try {
       
         setLoadingGuardarTab2(true);
-        // if (collapseConductor && values.duca_Conductor_Id > 0) {
-        //   const respuesta =axiosInstance.post(`${API_URL}EditarPart1`, values, {
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //     },
-        //   });
-        //   if (respuesta.data.data !== null) {
-        //     if (respuesta.data.data.messageStatus === "1") {
-        //       setLoadingGuardarTab2(false);
-        //       validacion(4);
-        //     } else {
-        //       console.log("error");
-        //     }
-        //   }
-        // } else {
-          const respuesta = await axiosInstance.post(`${API_URL}InsertPart2`, values, {
+       
+          const values5 = {
+            duca_Id: getducaid,
+            duca_Codigo_Declarante: values3.duca_Codigo_Declarante,
+            duca_Numero_Id_Declarante: values3.duca_Numero_Id_Declarante,
+            duca_NombreSocial_Declarante: values3.duca_NombreSocial_Declarante,
+            duca_DomicilioFiscal_Declarante: values3.duca_DomicilioFiscal_Declarante,
+            duca_Codigo_Transportista: values3.duca_Codigo_Transportista,
+            duca_Transportista_Nombre: values3.duca_Transportista_Nombre,
+            motr_Id: values3.motr_Id,
+            cont_NoIdentificacion: values3.cont_NoIdentificacion,
+            cont_Licencia: values3.cont_Licencia,
+            pais_IdExpedicion: values3.pais_IdExpedicion,
+            cont_Nombre: values3.cont_Nombre,
+            cont_Apellido: values3.cont_Apellido,
+            pais_Id: values3.pais_Id,
+            marca_Id: values3.marca_Id,
+            tran_IdUnidadTransporte: values3.tran_IdUnidadTransporte,
+            tran_Chasis: values3.tran_Chasis,
+            tran_Remolque: values3.tran_Remolque,
+            tran_CantCarga: values3.tran_CantCarga,
+            tran_NumDispositivoSeguridad: values3.tran_NumDispositivoSeguridad,
+            tran_Equipamiento: values3.tran_Equipamiento,
+            tran_TamanioEquipamiento: values3.tran_TamanioEquipamiento,
+            tran_TipoCarga: values3.tran_TipoCarga,
+            tran_IdContenedor: values3.tran_IdContenedor,
+            usua_UsuarioCreacion: 1,
+            tran_FechaCreacion: new Date().toISOString()
+          };
+          console.log('Tab 2 values:', values5);
+
+          const respuesta = await axiosInstance.post(`${API_URL}InsertPart2`, values5, {
             headers: {
               'Content-Type': 'application/json',
             },
@@ -763,7 +1063,10 @@ const abrirbusqueda = () => {
                 ...prev,
                 duca_Conductor_Id: parseInt(respuesta.data.data.messageStatus)
               }));
-              setActiveTab(4);
+              setActiveTab("4");
+              ListarItems();
+
+              console.log(activeTab);
               console.log("guardado con exito");
             } else {
                 console.log("error")
@@ -777,20 +1080,383 @@ const abrirbusqueda = () => {
     }
   };
 
-  const onFinishTab3 = (values) => {
-    console.log('Tab 3 values:', values);
-    // Handle form submission for Tab 3
-    // axios.post('your_api_endpoint_tab3', values)
-    //   .then(response => {
-    //     message.success('Data submitted successfully for Tab 3');
-    //   })
-    //   .catch(error => {
-    //     message.error('Submission failed for Tab 3');
-    //   });
+  async function InsertarItem(modelo) {
+    console.log(modelo);
+
+    try {
+        let datos = {
+            item_Id: modelo.Item_Id,
+            item_Cantidad_Bultos: modelo.CantidadBultos,
+            item_ClaseBulto: modelo.ClaseBulto,
+            item_Acuerdo: modelo.Acuerdo,
+            item_PesoNeto: modelo.PesoNeto,
+            item_PesoBruto: modelo.PesoBruto,
+            item_GastosDeTransporte: modelo.GastosTransporte,
+            item_Seguro: modelo.Seguro,
+            item_OtrosGastos: modelo.OtrosGastos,
+            item_CuotaContingente: modelo.CuotaContingente,
+            item_ReglasAccesorias: modelo.ReglasAccesorias,
+            item_CriterioCertificarOrigen: modelo.CriterioParaOrigen,
+            usua_UsuarioModificacion: 1,
+            item_FechaModificacion: new Date(),
+        }
+
+        const response = await axiosInstance.post("https://localhost:44380/api/Items/EditarItemDuca", datos);
+
+        return response;
+    } catch (error) {
+        console.error(error);
+    }
+}
+const handleChangeFilasItemsCompletados = (event) => {
+  setFilasItemsCompletados(event.target.value);
+};
+const camposToFilterItemCompletados = ["id", "item_Id", "item_Cantidad_Bultos", "item_PesoNeto", "item_GastosDeTransporte", "item_Seguro"];
+
+    const filteredRowsItemsCompletados = ListadoItemsCompletados.filter((row) => {
+        if (searchTextItemsCompletados === "") {
+            return true; // Mostrar todas las filas si el buscador está vacío
+        }
+
+        for (const [key, value] of Object.entries(row)) {
+            if (camposToFilterItemCompletados.includes(key)) {
+                const formattedValue =
+                    typeof value === "number"
+                        ? value.toString()
+                        : value.toString().toLowerCase();
+                const formattedSearchText =
+                    typeof searchTextItemsCompletados === "number"
+                        ? searchTextItemsCompletados.toString()
+                        : searchTextItemsCompletados.toLowerCase();
+                if (formattedValue.includes(formattedSearchText)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    );
+const columnsItemsCompletados = [
+  {
+      title: 'No.',
+      dataIndex: 'id',
+      key: 'id',
+      sorter: (a, b) => a.id - b.id
+  },
+  {
+      title: 'Id Item',
+      dataIndex: 'item_Id',
+      key: 'item_Id',
+      sorter: (a, b) => a.item_Id - b.item_Id
+  },
+  {
+      title: 'Cantidad Bultos',
+      dataIndex: 'item_Cantidad_Bultos',
+      key: 'item_Cantidad_Bultos',
+      sorter: (a, b) => a.item_Cantidad_Bultos - b.item_Cantidad_Bultos,
+  },
+  {
+      title: 'Peso Neto',
+      dataIndex: 'item_PesoNeto',
+      key: 'item_PesoNeto',
+      sorter: (a, b) => a.item_PesoNeto - b.item_PesoNeto,
+  },
+  {
+      title: 'Gastos de transporte',
+      dataIndex: 'item_GastosDeTransporte',
+      key: 'item_GastosDeTransporte',
+      sorter: (a, b) => a.item_GastosDeTransporte - b.item_GastosDeTransporte,
+  },
+  {
+      title: 'Seguro',
+      dataIndex: 'item_Seguro',
+      key: 'item_Seguro',
+      sorter: (a, b) => a.item_Seguro - b.item_Seguro,
+  },
+  {
+      title: 'Acciones',
+      key: 'operationItemsCompletados',
+      render: (params) =>
+          <div key={params.item_Id}>
+              <Button
+                  aria-controls={`menu-${params.item_Id}`}
+                  aria-haspopup="true"
+                  onClick={() => { handleEditItems(params) }}
+                  style={{
+                      borderRadius: '10px',
+                      backgroundColor: "#634A9E",
+                      color: "white",
+                  }}
+                  icon={<EditOutlined />}
+              >
+                  Editar
+              </Button>
+          </div>
+      ,
+  },
+];
+const handleEditItems = (params) => {
+  reset3_Items();
+  setIsEditItem(true);
+  setCompletarItem(false);
+
+  setValues3_Items("Item_Id", params.item_Id, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("CantidadBultos", params.item_Cantidad_Bultos, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("ClaseBulto", params.item_ClaseBulto, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("PesoNeto", params.item_PesoNeto, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("PesoBruto", params.item_PesoBruto, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("CuotaContingente", params.item_CuotaContingente, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("Acuerdo", params.item_Acuerdo, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("CriterioParaOrigen", params.item_CriterioCertificarOrigen, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("ReglasAccesorias", params.item_ReglasAccesorias, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("GastosTransporte", params.item_GastosDeTransporte, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("Seguro", params.item_Seguro, { shouldValidate: true, shouldTouch: true });
+  setValues3_Items("OtrosGastos", params.item_OtrosGastos, { shouldValidate: true, shouldTouch: true });
+};
+const { setValue: setValues3_Items, reset: reset3_Items } = useForm({
+  defaultValues: {
+    Item_Id: '',
+    CantidadBultos: '',
+    ClaseBulto: '',
+    PesoNeto: '',
+    PesoBruto: '',
+    CuotaContingente: '',
+    Acuerdo: '',
+    CriterioParaOrigen: '',
+    ReglasAccesorias: '',
+    GastosTransporte: '',
+    Seguro: '',
+    OtrosGastos: '',
+  },
+});
+async function EditarDocumentoSoporte(modelo2) {
+  try {
+      let datos = {
+          doso_Id: modelo2.doso_Id,
+          tido_Id: modelo2.CodigoTipoDocumento.value,
+          doso_NumeroDocumento: modelo2.NumeroDocumento,
+          doso_FechaEmision: modelo2.EmisionDocumento,
+          doso_FechaVencimiento: modelo2.FechaVencimiento,
+          doso_PaisEmision: modelo2.PaisEmision?.value,
+          doso_LineaAplica: modelo2.Linea,
+          doso_EntidadEmitioDocumento: modelo2.AutoridadEntidad,
+          doso_Monto: modelo2.Monto,
+          usua_UsuarioModificacion: 1,
+          doso_FechaModificacion: new Date(),
+      }
+
+      const response = await axiosInstance.post('https://localhost:44380/api/Duca/EditarPart3', datos);
+
+      return response;
+  } catch (error) {
+      console.error(error);
+  }
+}
+async function InsertarDocumentoSoporte(modelo9) {
+  try {
+      let datos = {
+          tido_Id: modelo9.CodigoTipoDocumento.value,
+          duca_Id: getducaid,
+          doso_NumeroDocumento: modelo9.NumeroDocumento,
+          doso_FechaEmision: modelo9.EmisionDocumento,
+          doso_FechaVencimiento: modelo9.FechaVencimiento,
+          doso_PaisEmision: modelo9.PaisEmision,
+          doso_LineaAplica: modelo9.Linea,
+          doso_EntidadEmitioDocumento: modelo9.AutoridadEntidad,
+          doso_Monto: modelo9.Monto,
+          usua_UsuarioCreacion: 1,
+          doso_FechaCreacion: new Date(),
+      }
+
+      console.log(datos);
+      const response = await axiosInstance.post('https://localhost:44380/api/Duca/InsertPart3', datos);
+      return response;
+  } catch (error) {
+      console.error(error);
+  }
+}
+const guardarTab3_DocumentosSoporte = async (value9) => {
+  if (isEditDocumentoSoporte) {
+      
+          const respuesta = await EditarDocumentoSoporte(value9);
+          if (respuesta.data.data !== null) {
+              if (respuesta.data.data.messageStatus === "1") {
+                  setIsEditDocumentoSoporte(false);
+                  getDocumentosSoporteListByNoDuca();
+              } else {
+                console.log("error segunto else1");
+              }
+          }
+      
+  } else {
+      
+          const respuesta = await InsertarDocumentoSoporte(value9);
+          if (respuesta.data.data !== null) {
+              if (respuesta.data.data.messageStatus === "1") {
+                  getDocumentosSoporteListByNoDuca();
+              } else {
+                console.log("error segunto else2");}
+          }
+      
+  }
+}
+async function EliminarDocumentoSoporte(doso_Id) {
+  try {
+      const response = await axiosInstance.post(`https://localhost:44380/api/DocumentosDeSoporte/Eliminar?doso_Id=${doso_Id}`)
+
+      return response;
+  } catch (error) {
+      console.error(error);
+  }
+}
+const eliminarDocumentoSoporte = async (doso_Id) => {
+  const respuesta = await EliminarDocumentoSoporte(doso_Id);
+
+  if (respuesta.data.data !== null) {
+      if (respuesta.data.data.messageStatus === "1") {
+          console.log("Éxito. El registro se elimino correctamente.")
+          getDocumentosSoporteListByNoDuca();
+      } else {
+          console.log("error segunto else");
+      }
+  }
+}
+
+
+
+const columnsDocumentos = [
+  {
+      title: 'No.',
+      dataIndex: 'id',
+      key: 'id',
+      sorter: (a, b) => a.id - b.id
+  },
+  {
+      title: 'Código del tipo Documento',
+      dataIndex: 'tido_Codigo',
+      key: 'tido_Codigo',
+      sorter: (a, b) => a.tido_Codigo.localeCompare(b.tido_Codigo),
+  },
+  {
+      title: 'Número de Documento',
+      dataIndex: 'doso_NumeroDocumento',
+      key: 'doso_NumeroDocumento',
+      sorter: (a, b) => a.doso_NumeroDocumento.localeCompare(b.doso_NumeroDocumento),
+  },
+  {
+    title: 'Acciones',
+    key: 'operationDocumentos',
+    render: (params) =>
+        <div key={params.doso_Id}>
+            <Space direction="horizontal">
+                <Button
+                    aria-controls={`menu-${params.doso_Id}`}
+                    aria-haspopup="true"
+                    onClick={(e) => handleClickDocumentos(e, params.doso_Id)}
+                    shape="round"
+                    style={{ backgroundColor: "#634A9E", color: "white" }}
+                    icon={<MoreOutlined />}
+                >
+                    Opciones
+                </Button>
+                <Menu
+                    id={`menu-${params.doso_Id}`}
+                    anchorEl={anchorElDocumentos[params.doso_Id]}
+                    open={Boolean(anchorElDocumentos[params.doso_Id])}
+                    onClose={() => handleCloseDocumentos(params.doso_Id)}
+                >
+                    <Menu.Item onClick={() => handleEditDocumentos(params)}>
+                        <EditOutlined /> Editar
+                    </Menu.Item>
+                    <Menu.Item onClick={() => handleDeleteDocumentos(params.doso_Id)}>
+                        <DeleteOutlined /> Eliminar
+                    </Menu.Item>
+                </Menu>
+            </Space>
+        </div>
+    ,
+},
+
+];
+const { control, setValue: setValues3_DocumentosSoporte, reset: reset3_DocumentosSoporte, handleSubmit } = useForm();
+const handleEditDocumentos = (params) => {
+  setIsEditDocumentoSoporte(true);
+  reset3_DocumentosSoporte();
+
+  setValues3_DocumentosSoporte("doso_Id", params.doso_Id);
+  setValues3_DocumentosSoporte("CodigoTipoDocumento", tiposDocumentos.find(item => item.value == params.tido_Id), { shouldValidate: true, shouldTouch: true });
+  setValues3_DocumentosSoporte("NumeroDocumento", params.doso_NumeroDocumento, { shouldValidate: true });
+  setValues3_DocumentosSoporte("EmisionDocumento", params.doso_FechaEmision);
+  setValues3_DocumentosSoporte("FechaVencimiento", params.doso_FechaVencimiento);
+  setValues3_DocumentosSoporte("PaisEmision", Paises.find(item => item.value == params.doso_PaisEmision));
+  setValues3_DocumentosSoporte("Linea", params.doso_LineaAplica);
+  setValues3_DocumentosSoporte("AutoridadEntidad", params.doso_EntidadEmitioDocumento);
+  setValues3_DocumentosSoporte("Monto", params.doso_Monto);
+
+  handleCloseDocumentos(params.doso_Id);
+};
+
+async function ListarDocumentosSoporteByNoDuca() {
+  try {
+      const response = await axiosInstance.get('https://localhost:44380/api/DocumentosDeSoporte/Listar');
+
+      const data = response.data.data.map((item, index) => {
+          return {
+              id: index + 1,
+              doso_Id: item.doso_Id,
+              tido_Id: item.tido_Id,
+              tido_Codigo: item.tido_Codigo,
+              tido_Descripcion: item.tido_Descripcion,
+              duca_Id: item.duca_Id,
+              doso_NumeroDocumento: item.doso_NumeroDocumento,
+              doso_FechaEmision: item.doso_FechaEmision,
+              doso_FechaVencimiento: item.doso_FechaVencimiento,
+              doso_PaisEmision: item.doso_PaisEmision,
+              doso_LineaAplica: item.doso_LineaAplica,
+              doso_EntidadEmitioDocumento: item.doso_EntidadEmitioDocumento,
+              doso_Monto: item.doso_Monto
+          }
+      })
+      return data.filter((item) => item.duca_Id === parseInt(parseInt(getducaid)));
+  } catch (error) {
+      console.error(error);
+  }
+}
+const getDocumentosSoporteListByNoDuca = async () => {
+  try {
+      const data = await ListarDocumentosSoporteByNoDuca();
+      setDocumentosSoporteList(data);
+  } catch (error) {
+      console.log(error);
+  }
+}
+
+  const onFinishTab3 = async (values4) => {
+    console.log('Tab 3 values:', values4);
+    try {
+      const respuesta = await InsertarItem(values4);
+      if (respuesta.data.data !== null) {
+        if (respuesta.data.data.messageStatus === "1") {
+          // reset3_Items();
+          setCompletarItem(true);
+          ListarItems();
+
+          
+            setIsEditItem(false);
+          
+        } else {
+          console.log("error segunto else");
+
+        }
+      }
+    } catch (error) {
+      console.log("Error. Ocurrió un error al intentar realizar la operación");
+      console.error(error);
+    }
   };
 
   return (
-    <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)}>
+    <Tabs  activeKey={activeTab} onChange={(key) => setActiveTab(key)} >
        <Tabs.TabPane tab="Asignar DEVAS a una DUCA" key="1">
        <Form
           form={form1}
@@ -853,13 +1519,13 @@ const abrirbusqueda = () => {
         > */}
         
 
-        <TabPane tab="Identificación de la Declaración" key="2">
-        <Form form={form} onFinish={onFinish}>
+        <TabPane   tab="Identificación de la Declaración" key="2">
+        <Form form={form1} onFinish={onFinish}>
           <Row gutter={[16, 16]}>
             <Col span={6}>
               <Form.Item
                 label="Regimen Aduanero"
-                name="RegimenAduanero"
+                name="duca_Regimen_Aduanero"
                 rules={[{ required: true, message: 'Please select a Regimen Aduanero' }]}
               >
                 <Select
@@ -885,16 +1551,26 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="No. de DUCA"
-                name="NoDuca"
+                name="duca_No_Duca"
                 rules={[{ required: true, message: 'Please enter the DUCA number' }]}
               >
                 <Input placeholder="DUCA number" />
               </Form.Item>
             </Col>
+
+            <Col span={6}>
+              <Form.Item
+                label="duca_Id"
+                name="duca_Id"
+              >
+                <Input value={localStorage.getItem("duca_Id")}  />
+              </Form.Item >
+            </Col>
+
             <Col span={6}>
               <Form.Item
                 label="No. Correlativo o Referencia"
-                name="NoCorrelativoReferencia"
+                name="duca_No_Correlativo_Referencia"
                 rules={[{ required: true, message: 'Please enter the Correlativo or Referencia number' }]}
               >
                 <Input placeholder="Correlativo or Referencia number" />
@@ -903,7 +1579,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="Aduana Registro"
-                name="AduanaRegistro"
+                name="duca_AduanaRegistro"
                 rules={[{ required: true, message: 'Please select an Aduana Registro' }]}
               >
                 <Select
@@ -926,7 +1602,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="Fecha de Vencimiento"
-                name="FechaVencimiento"
+                name="duca_FechaVencimiento"
                 rules={[{ required: true, message: 'Please select a Fecha de Vencimiento' }]}
               >
                 <DatePicker style={{ width: '100%' }} />
@@ -935,7 +1611,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="País de Procedencia"
-                name="PaisProcedencia"
+                name="duca_Pais_Procedencia"
                 rules={[{ required: true, message: 'Please select a País de Procedencia' }]}
               >
                 <Select
@@ -957,7 +1633,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="País de Destino"
-                name="PaisDestino"
+                name="duca_Pais_Destino"
                 rules={[{ required: true, message: 'Please select a País de Destino' }]}
               >
                 <Select
@@ -982,7 +1658,7 @@ const abrirbusqueda = () => {
                 <Col xs={8}>
                     <Form.Item
                         label="Depósito Aduanero / Zona Franca"
-                        name="DepositoAduanero"
+                        name="duca_Deposito_Aduanero"
                         rules={[{ required: true, message: 'Please input Depósito Aduanero / Zona Franca!' }]}
                     >
                         <Input />
@@ -992,7 +1668,7 @@ const abrirbusqueda = () => {
                 <Col xs={8}>
                     <Form.Item
                         label="Modalidad"
-                        name="Modalidad"
+                        name="duca_Modalidad"
                         rules={[{ required: true, message: 'Please input Modalidad!' }]}
                     >
                         <Input />
@@ -1002,7 +1678,7 @@ const abrirbusqueda = () => {
                 <Col xs={8}>
                     <Form.Item
                         label="Clase"
-                        name="Clase"
+                        name="duca_Clase"
                         rules={[{ required: true, message: 'Please input Clase!' }]}
                     >
                         <Input />
@@ -1012,7 +1688,7 @@ const abrirbusqueda = () => {
                 <Col xs={18}>
                     <Form.Item
                         label="Lugar de Desembarque"
-                        name="LugarDesembarque"
+                        name="duca_Lugar_Desembarque"
                         // rules={[{ required: true, message: 'Please select Lugar de Desembarque!' }]}
                     >
                      
@@ -1088,7 +1764,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="Manifiesto"
-                name="Manifiesto"
+                name="duca_Manifiesto"
                 rules={[{ required: true, message: 'Please enter the Manifiesto' }]}
               >
                 <Input placeholder="Manifiesto" />
@@ -1097,7 +1773,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
               <Form.Item
                 label="Titulo"
-                name="Titulo"
+                name="duca_Titulo"
                 rules={[{ required: true, message: 'Please enter the Titulo' }]}
               >
                 <Input placeholder="Titulo" />
@@ -1109,7 +1785,7 @@ const abrirbusqueda = () => {
             <Col span={6}>
         <Form.Item
             label="Aduana Destino:"
-            name="AduanaDestino"
+            name="duca_AduanaDestino"
             rules={[{ required: true, message: 'Please enter the Aduana Destino' }]}
         >
             <Input
@@ -1133,7 +1809,7 @@ const abrirbusqueda = () => {
       </TabPane>
 
       <TabPane tab="Declarante" key="3">
-        <Form form={form} onFinish={onFinishTab2}>
+        <Form form={form2} onFinish={onFinishTab2}>
           <Row gutter={16}>
             <Col span={24}>
               <Divider orientation="left">Declarante</Divider>
@@ -1141,7 +1817,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Código"
-                name="Codigo_Declarante"
+                name="duca_Codigo_Declarante"
                 rules={[{ required: true, message: 'Please enter the Código' }]}
               >
                 <Input
@@ -1156,7 +1832,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="No. Identificación"
-                name="NoIdentificacion_Declarante"
+                name="duca_Numero_Id_Declarante"
                 rules={[{ required: true, message: 'Please enter the No. Identificación' }]}
               >
                 <Input
@@ -1171,7 +1847,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Nombre o Razón Social"
-                name="NombreRazonSocial_Declarante"
+                name="duca_NombreSocial_Declarante"
                 rules={[{ required: true, message: 'Please enter the Nombre o Razón Social' }]}
               >
                 <Input />
@@ -1180,7 +1856,7 @@ const abrirbusqueda = () => {
             <Col span={24}>
               <Form.Item
                 label="Domicilio Fiscal"
-                name="DomicilioFiscal_Declarante"
+                name="duca_DomicilioFiscal_Declarante"
                 rules={[{ required: true, message: 'Please enter the Domicilio Fiscal' }]}
               >
                 <Input />
@@ -1194,7 +1870,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Código"
-                name="Codigo"
+                name="duca_Codigo_Transportista"
                 rules={[{ required: true, message: 'Please enter the Código' }]}
               >
                 <Input
@@ -1209,7 +1885,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Nombre"
-                name="Nombre"
+                name="duca_Transportista_Nombre"
                 rules={[{ required: true, message: 'Please enter the Nombre' }]}
               >
                 <Input />
@@ -1218,7 +1894,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Modo de Transporte"
-                name="ModoTransporte"
+                name="motr_Id"
                 rules={[{ required: true, message: 'Please select the Modo de Transporte' }]}
               >
                 <Select
@@ -1251,7 +1927,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="No. Identificación"
-                name="NoIdentificador"
+                name="cont_NoIdentificacion"
                 rules={[{ required: true, message: 'Please enter the No. Identificación' }]}
               >
                 <Input
@@ -1266,7 +1942,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="No. Licencia de Conducir"
-                name="NoLicenciaConducir"
+                name="cont_Licencia"
                 rules={[{ required: true, message: 'Please enter the No. Licencia de Conducir' }]}
               >
                 <Input
@@ -1281,7 +1957,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="País Expedición"
-                name="PaisExpedicion"
+                name="pais_IdExpedicion"
                 rules={[{ required: true, message: 'Please select the País Expedición' }]}
               >
                 <Select
@@ -1303,7 +1979,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Nombres"
-                name="Nombres"
+                name="cont_Nombre"
                 rules={[{ required: true, message: 'Please enter the Nombres' }]}
               >
                 <Input />
@@ -1312,7 +1988,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Apellidos"
-                name="Apellidos"
+                name="cont_Apellido"
                 rules={[{ required: true, message: 'Please enter the Apellidos' }]}
               >
                 <Input />
@@ -1321,7 +1997,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Id Unidad Transporte"
-                name="IdUnidadTransporte"
+                name="tran_IdUnidadTransporte"
                 rules={[{ required: true, message: 'Please enter the Id Unidad Transporte' }]}
               >
                 <Input
@@ -1336,7 +2012,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="País de Registro"
-                name="PaisRegistro"
+                name="pais_Id"
                 rules={[{ required: true, message: 'Please select the País de Registro' }]}
               >
                 <Select
@@ -1358,7 +2034,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Marca"
-                name="Marca"
+                name="marca_Id"
                 rules={[{ required: true, message: 'Please select the Marca' }]}
               >
                 <Select
@@ -1380,7 +2056,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Chasis / Vin"
-                name="ChasisVin"
+                name="tran_Chasis"
                 rules={[{ required: true, message: 'Please enter the Chasis / Vin' }]}
               >
                 <Input
@@ -1395,7 +2071,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Identificación del Remolque"
-                name="IdentificacionRemolque"
+                name="tran_Remolque"
                 rules={[{ required: true, message: 'Please enter the Identificación del Remolque' }]}
               >
                 <Input />
@@ -1404,7 +2080,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Cantidad de Unidades Carga"
-                name="CantidadUnidadesCarga"
+                name="tran_CantCarga"
                 rules={[{ required: true, message: 'Please enter the Cantidad de Unidades Carga' }]}
               >
                 <Input
@@ -1418,7 +2094,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Número de Dispositivo Seguridad"
-                name="NumeroDispositivo"
+                name="tran_NumDispositivoSeguridad"
                 rules={[{ required: true, message: 'Please enter the Número de Dispositivo Seguridad' }]}
               >
                 <Input
@@ -1432,7 +2108,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Equipamiento"
-                name="Equipamiento"
+                name="tran_Equipamiento"
                 rules={[{ required: true, message: 'Please enter the Equipamiento' }]}
               >
                 <Input />
@@ -1441,7 +2117,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Tamaño del equipamiento"
-                name="TamanioEquipamiento"
+                name="tran_TamanioEquipamiento"
                 rules={[{ required: true, message: 'Please enter the Tamaño del equipamiento' }]}
               >
                 <Input />
@@ -1450,7 +2126,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Tipo de Carga"
-                name="TipoCarga"
+                name="tran_TipoCarga"
                 rules={[{ required: true, message: 'Please enter the Tipo de Carga' }]}
               >
                 <Input />
@@ -1459,7 +2135,7 @@ const abrirbusqueda = () => {
             <Col span={8}>
               <Form.Item
                 label="Número o Números de Identificación"
-                name="NIdentificacionContenedor"
+                name="tran_IdContenedor"
                 rules={[{ required: true, message: 'Please enter the Número o Números de Identificación' }]}
               >
                 <Input />
@@ -1470,13 +2146,9 @@ const abrirbusqueda = () => {
       </Collapse>)}
           <Row gutter={16}>
             <Col span={24} style={{ textAlign: 'right' }}>
-            <Button
-            type="primary"
-            htmlType="submit"
-            style={{ paddingTop: '6px' }}
-            >
-            Submit
-            </Button>
+            <Button type="primary" htmlType="submit">
+                Submit
+              </Button>
               <Button
                 // onClick={DialogCancelarDuca}
                 style={{ marginLeft: 8 }}
@@ -1488,87 +2160,401 @@ const abrirbusqueda = () => {
         </Form>
       </TabPane>
 
+      <Tabs.TabPane tab="Mercancias" key="4">
+        <Divider orientation="left">Mercancias</Divider>
 
-      <Tabs.TabPane tab="Insertar Tab 3" key="4">
+        <Row gutter={16} style={{ marginTop: 16 }}>
+          <Col span={24}>
+            <Space direction="vertical" size={16}>
+              <Select
+                value={filasItems}
+                onChange={handleChangeFilasItems}
+                style={{ width: 120 }}
+              >
+                <Select.Option value={10}>10</Select.Option>
+                <Select.Option value={20}>20</Select.Option>
+                <Select.Option value={30}>30</Select.Option>
+              </Select>
+
+              <Input
+                placeholder="Buscar"
+                value={searchTextItems}
+                onChange={handleSearchChangeItems}
+                suffix={<SearchOutlined />}
+                style={{ width: 200 }}
+              />
+            </Space>
+          </Col>
+        </Row>
+
+        <Table
+          columns={columnsItems}
+          dataSource={filteredRowsItems}
+          pagination={{
+            pageSize: filasItems,
+            showSizeChanger: false,
+          }}
+          size="small"
+          style={{ marginTop: 16 }}
+        />
+
         <Form form={form3} layout="vertical" onFinish={onFinishTab3}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="tido_Id" label="TIDO ID" rules={[{ required: true, message: 'Please input TIDO ID!' }]}>
+        <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                label="Id Item"
+                name="Item_Id"
+                rules={[{ required: true, message: 'Please enter the Id Item' }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="duca_Id" label="DUCA ID" rules={[{ required: true, message: 'Please input DUCA ID!' }]}>
+            <Col span={8}>
+              <Form.Item
+                label="Cantidad Bultos"
+                name="CantidadBultos"
+                rules={[{ required: true, message: 'Please enter the Cantidad Bultos' }]}
+              >
+                <Input maxLength={3} onKeyPress={(event) => { if (!/[0-9]/.test(event.key)) { event.preventDefault(); } }} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Clase de Bultos"
+                name="ClaseBulto"
+                rules={[{ required: true, message: 'Please enter the Clase de Bultos' }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Peso Neto"
+                name="PesoNeto"
+                rules={[{ required: true, message: 'Please enter the Peso Neto' }]}
+              >
+                <Input maxLength={12} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Peso Bruto"
+                name="PesoBruto"
+                rules={[{ required: true, message: 'Please enter the Peso Bruto' }]}
+              >
+                <Input maxLength={12} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Cuota Contingente"
+                name="CuotaContingente"
+                rules={[{ required: true, message: 'Please enter the Cuota Contingente' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Acuerdo"
+                name="Acuerdo"
+                rules={[{ required: true, message: 'Please enter the Acuerdo' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Criterio Para Certificar Origen"
+                name="CriterioParaOrigen"
+                rules={[{ required: true, message: 'Please enter the Criterio Para Certificar Origen' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Reglas Accesorias"
+                name="ReglasAccesorias"
+                rules={[{ required: true, message: 'Please enter the Reglas Accesorias' }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Gastos de Transporte"
+                name="GastosTransporte"
+                rules={[{ required: true, message: 'Please enter the Gastos de Transporte' }]}
+              >
+                <Input maxLength={12} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Seguro"
+                name="Seguro"
+                rules={[{ required: true, message: 'Please enter the Seguro' }]}
+              >
+                <Input maxLength={12} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Otros Gastos"
+                name="OtrosGastos"
+                rules={[{ required: true, message: 'Please enter the Otros Gastos' }]}
+              >
+                <Input maxLength={12} />
+              </Form.Item>
+            </Col>
+            
           </Row>
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="doso_NumeroDocumento" label="Numero Documento" rules={[{ required: true, message: 'Please input Numero Documento!' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="doso_FechaEmision" label="Fecha Emision" rules={[{ required: true, message: 'Please input Fecha Emision!' }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
+            <Col span={24} style={{ textAlign: 'right' }}>
+              <Button type="primary" htmlType="submit">
+                Guardar
+              </Button>
             </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="doso_FechaVencimiento" label="Fecha Vencimiento" rules={[{ required: true, message: 'Please input Fecha Vencimiento!' }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
+          <Col span={8}>
+              <Button
+                disabled={completarItem}
+                icon={isEditItem ? "edit" : "add"}
+                type="primary"
+                style={{
+                  borderRadius: "10px",
+                  marginRight: "10px",
+                  marginTop: "20px"
+                }}
+                sx={{
+                  backgroundColor: "#D1AF3C",
+                  color: "white",
+                  "&:hover": { backgroundColor: "#EACB60" },
+                }}
+                  // onClick={() => {
+                  //   if (!isValid3_Items) {
+                  //     ToastWarning();
+                  //   }
+                  // }}
+                htmlType="submit"
+              >
+                {isEditItem ? "Editar Mercancía" : "Completar Mercancía"}
+              </Button>
             </Col>
-            <Col span={12}>
-              <Form.Item name="doso_PaisEmision" label="Pais Emision" rules={[{ required: true, message: 'Please input Pais Emision!' }]}>
-                <Select>
-                  {/* Populate options dynamically */}
-                  <Option value="1">Pais 1</Option>
-                  <Option value="2">Pais 2</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="doso_LineaAplica" label="Linea Aplica" rules={[{ required: true, message: 'Please input Linea Aplica!' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="doso_EntiadEmitioDocumento" label="Entidad Emitio Documento" rules={[{ required: true, message: 'Please input Entidad Emitio Documento!' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="doso_Monto" label="Monto" rules={[{ required: true, message: 'Please input Monto!' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="usua_UsuarioCreacion" label="Usuario Creacion" rules={[{ required: true, message: 'Please input Usuario Creacion!' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="doso_FechaCreacion" label="Fecha Creacion" rules={[{ required: true, message: 'Please input Fecha Creacion!' }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Submit
-            </Button>
-          </Form.Item>
         </Form>
-      </Tabs.TabPane>
+        <Row>
+    <Col span={24}>
+        <Row justify="end" align="middle" gutter={16}>
+            <Col>
+                <label className='mt-8'>Filas por página:</label>
+            </Col>
+            <Col>
+                <Select
+                    value={filasItemsCompletados}
+                    onChange={handleChangeFilasItemsCompletados}
+                    style={{ width: 80 }}
+                    size="small"
+                >
+                    <Option value={10}>10</Option>
+                    <Option value={20}>20</Option>
+                    <Option value={30}>30</Option>
+                </Select>
+            </Col>
+            <Col>
+                <Input
+                    placeholder='Buscar'
+                    value={searchTextItemsCompletados}
+                    onChange={handleSearchChangeItemsCompletados}
+                    size="small"
+                    style={{ borderRadius: '10px', width: 200 }}
+                    prefix={<SearchOutlined />}
+                />
+            </Col>
+        </Row>
+        <div className='center' style={{ width: '95%', margin: 'auto', marginTop: '20px' }}>
+            <Table
+                locale={{
+                    triggerDesc: 'Ordenar descendente',
+                    triggerAsc: 'Ordenar ascendente',
+                    cancelSort: 'Cancelar',
+                    emptyText: 'No data', // Replace this with your loading icon or message
+                }}
+                columns={columnsItemsCompletados}
+                dataSource={filteredRowsItemsCompletados}
+                size="small"
+                pagination={{
+                    pageSize: filasItemsCompletados,
+                    showSizeChanger: false,
+                    className: "custom-pagination",
+                }}
+            />
+        </div>
+    </Col>
+</Row>
+<div>
+            <Checkbox
+                defaultChecked={documentosSoporteList.length > 0}
+                onClick={() => {
+                    setCollapseDocumentosSoporte(!collapseDocumentosSoporte);
+                    if (!collapseDocumentosSoporte) {
+                        setIsEditDocumentoSoporte(false);
+                    }
+                }}
+            >
+                ¿Desea agregar Documentos de Soporte?
+            </Checkbox>
+
+            {collapseDocumentosSoporte && (
+                <>
+                    <Divider style={{ marginTop: '25px', marginBottom: '25px' }}>
+                        Documentos de Soporte
+                    </Divider>
+
+                    <Form form={form4} onFinish={guardarTab3_DocumentosSoporte}>
+                        <Space direction="vertical" size={16} style={{ display: 'flex' }}>
+                            <Form.Item
+                                name="CodigoTipoDocumento"
+                                label="Código del Tipo Documento"
+                                rules={[{ required: true, message: 'Por favor seleccione un tipo de documento' }]}
+                            >
+                                <Select placeholder="Seleccione un tipo de documento">
+                                    {/* Replace with your actual options */}
+                                    <Option value="1">Tipo 1</Option>
+                                    <Option value="2">Tipo 2</Option>
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item
+                                name="NumeroDocumento"
+                                label="Número de Documento"
+                                rules={[{ required: true, message: 'Por favor ingrese el número de documento' }]}
+                            >
+                                <Input style={{ textTransform: "uppercase" }} />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="EmisionDocumento"
+                                label="Fecha Emisión del Documento"
+                                rules={[{ required: true, message: 'Por favor seleccione la fecha de emisión' }]}
+                            >
+                                <DatePicker  />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="FechaVencimiento"
+                                label="Fecha Vencimiento del Documento"
+                                rules={[{ required: true, message: 'Por favor seleccione la fecha de vencimiento' }]}
+                            >
+                                <DatePicker />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="PaisEmision"
+                                label="País de Emisión"
+                                rules={[{ required: true, message: 'Por favor seleccione el país de emisión' }]}
+                            >
+                                 <Select
+                                      showSearch
+                                      placeholder="Select a País de Procedencia"
+                                      optionFilterProp="children"
+                                      filterOption={(input, option) =>
+                                        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                      }
+                                    >
+                                      {Paises.map((Pais) => (
+                                        <Option key={Pais.value} value={Pais.value}>
+                                          {Pais.label}
+                                        </Option>
+                                      ))}
+                                  </Select>
+                            </Form.Item>
+
+                            <Form.Item
+                                name="Linea"
+                                label="Linea (al que aplica el documento)"
+                                rules={[{ required: true, message: 'Por favor ingrese la línea' }]}
+                            >
+                                <Input maxLength={4} onKeyPress={(event) => {
+                                    if (!/[0-9]/.test(event.key)) {
+                                        event.preventDefault();
+                                    }
+                                }} />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="AutoridadEntidad"
+                                label={
+                                    <>
+                                        Autoridad o Entidad que Emitió
+                                        <Tooltip title="el Documento">
+                                            <InfoCircleOutlined style={{ marginLeft: 4, color: '#ADADAD' }} />
+                                        </Tooltip>
+                                    </>
+                                }
+                                rules={[{ required: true, message: 'Por favor ingrese la autoridad o entidad' }]}
+                            >
+                                <Input />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="Monto"
+                                label="Monto"
+                                rules={[{ required: true, message: 'Por favor ingrese el monto' }]}
+                            >
+                                <Input maxLength={10} onKeyPress={(event) => {
+                                    if (!/[0-9]/.test(event.key)) {
+                                        event.preventDefault();
+                                    }
+                                }} />
+                            </Form.Item>
+
+                            <Form.Item>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    style={{
+                                        borderRadius: "10px",
+                                        marginRight: "10px",
+                                        marginTop: "25px",
+                                        backgroundColor: "#D1AF3C",
+                                        color: "white",
+                                    }}
+                                    onClick={() => {
+                                        if (!isEditDocumentoSoporte) {
+                                            // Add your validation logic here
+                                        }
+                                    }}
+                                >
+                                    {isEditDocumentoSoporte ? "Editar Documento" : "Agregar Documento"}
+                                </Button>
+                            </Form.Item>
+                        </Space>
+                    </Form>
+
+                    <div style={{ width: '95%', margin: 'auto', marginTop: '20px' }}>
+                        <Table
+                            locale={{
+                                triggerDesc: 'Ordenar descendente',
+                                triggerAsc: 'Ordenar ascendente',
+                                cancelSort: 'Cancelar',
+                                emptyText: "No Data", // Replace with your loading icon if needed
+                            }}
+                            columns={columnsDocumentos}
+                            dataSource={documentosSoporteList}
+                            size="small"
+                            pagination={{
+                                pageSize: 10,
+                                showSizeChanger: false,
+                                className: "custom-pagination",
+                            }}
+                        />
+                    </div>
+                </>
+            )}
+        </div>
+      </Tabs.TabPane>             
+   
     </Tabs>
   );
 };
