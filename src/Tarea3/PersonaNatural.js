@@ -28,7 +28,6 @@ const SubCategoria = () => {
   const [activeKey, setActiveKey] = useState(null);
   const [showTable, setShowTable] = useState(true);
   const [form] = Form.useForm();
-  const [formCorreoElectronico] = Form.useForm();
   const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
   const [getPersonas, setPerson] = useState([]);
   const [oficios, setOficios] = useState([]);
@@ -45,6 +44,11 @@ const SubCategoria = () => {
   const [ciudades, setCiudades] = useState([]);
   const [correoValidado, setCorreoValidado] = React.useState('0');
   const [modalForm] = Form.useForm();
+  const [modalVisible, setmodalVisible] = useState(false);
+
+  const [correoValidadoAlternativo, setCorreoValidadoAlternativo] = React.useState('0');
+  const [modalFormAlternativo] = Form.useForm();
+  const [modalVisibleAlternativo, setmodalVisibleAlternativo] = useState(false);
 
     useEffect(() => {
     const fetchData = async () => {
@@ -218,6 +222,7 @@ const SubCategoria = () => {
       setSelectedFileName2(subCategoria.pena_ArchivoDNI);
      setSelectedFileName3(subCategoria.pena_ArchivoNumeroRecibo);
       setPersonaIngresada('2') 
+      // setCorreoValidado('0');
     } else {
       form.resetFields();
       setSelectedFileName('Seleccione');
@@ -225,51 +230,188 @@ const SubCategoria = () => {
      setSelectedFileName3('Seleccione');
      setPersonaIngresada('0');
      setPers_Id('0');
+     setCorreoValidado('0');
+     setCorreoValidadoAlternativo('0')
     }
   };
 
 
+
+  const enviarEmailAlternativo = async () => {
+    try {
+      modalFormAlternativo.resetFields();
+
+      const correoElectronicoAlternativo = form.getFieldValue('pena_CorreoAlternativo');
+      if(correoElectronicoAlternativo != null){
+        const response = await validarCorreo(correoElectronicoAlternativo);
+        const codigo = response.data;
+        console.log('CODIGO VERIFICACION: ' + codigo);
+        setmodalVisibleAlternativo(true);
+  
+        Modal.confirm({
+          title: 'Ingrese el código',
+          content: (
+                <Form form={modalFormAlternativo}>
+                <Form.Item
+                 name="codigoVerificacionAlternativo"
+                 rules={[
+                   { required: true, message: 'Por favor ingrese el código de verificación' },
+                   { len: 6, message: 'El código debe tener 6 dígitos' }
+                 ]}
+               >
+                 <Input 
+                   inputMode="numeric"
+                   maxLength={6}
+                   onChange={(e) => {
+                     const value = e.target.value;
+                     if (!/^\d*$/.test(value)) {
+                       e.target.value = value.replace(/\D/g, '');
+                     }
+                     if (e.target.value.length <= 6) {
+                      modalFormAlternativo.setFieldsValue({ codigoVerificacionAlternativo: e.target.value });
+                     }
+                   }}
+                 />
+               </Form.Item>
+               </Form>
+          ),
+          okText: 'Verificar',
+          cancelText: 'Cancelar',
+          onOk: async () => {
+            try {
+              const valoresModal = modalFormAlternativo.getFieldsValue();
+              const codigoIngresado = valoresModal.codigoVerificacionAlternativo;
+              console.log('CODIGO INGRESADO: ' + codigoIngresado)
+              console.log('CODIGO DEVUELTO API: ' + codigo)
+              if(codigoIngresado != null){
+                if (String(codigoIngresado) === String(codigo)) {
+                  console.log('ENTRO?');
+                  setCorreoValidadoAlternativo('1');
+                  notification.success({ message: 'Código correcto', description: 'El código ingresado es correcto.' });
+                  setmodalVisibleAlternativo(false)
+                } else {
+                  // notification.error({ message: 'Código incorrecto', description: 'El código ingresado es incorrecto.' });
+                  modalFormAlternativo.setFields([{
+                    name: 'codigoVerificacionAlternativo',
+                    errors: ['El codigo ingresado es incorrecto'],
+                    }]);
+                  setmodalVisibleAlternativo(true);
+                  return Promise.reject();
+                }
+              }
+              else{
+                        // Si el correo no está validado
+                  modalFormAlternativo.setFields([{
+                  name: 'codigoVerificacionAlternativo',
+                  errors: ['Por favor ingrese el codigo'],
+                  }]);
+                  setmodalVisibleAlternativo(true);
+                  return Promise.reject();
+              }
+            
+            } catch (error) {
+              notification.error({ message: 'Operación no realizada', description: error.message });
+            }
+          },
+        });
+      }else{
+          // Si el correo no está validado
+          form.setFields([{
+            name: 'pena_CorreoAlternativo',
+            errors: ['Por favor ingrese el correo'],
+          }]);
+      }
+    
+    } catch (error) {
+      notification.error({ message: 'Error al enviar correo', description: error.message });
+    }
+  };
+
   const enviarEmail = async () => {
     try {
       modalForm.resetFields();
-      const correoElectronico = form.getFieldValue('pena_CorreoElectronico');
-      const response = await validarCorreo(correoElectronico);
-      const codigo = response.data;
-      console.log('CODIGO VERIFICACION: ' + codigo);
-      
 
-      Modal.confirm({
-        title: 'Ingrese el código',
-        content: (
-          <Form form={modalForm}>
-            <Form.Item
+      const correoElectronico = form.getFieldValue('pena_CorreoElectronico');
+      if(correoElectronico != null){
+        const response = await validarCorreo(correoElectronico);
+        const codigo = response.data;
+        console.log('CODIGO VERIFICACION: ' + codigo);
+        setmodalVisible(true);
+  
+        Modal.confirm({
+          title: 'Ingrese el código',
+          content: (
+            <Form form={modalForm}>
+             <Form.Item
               name="codigoVerificacion"
-              rules={[{ required: true, message: 'Por favor ingrese el código de verificación' }]}
+              rules={[
+                { required: true, message: 'Por favor ingrese el código de verificación' },
+                { len: 6, message: 'El código debe tener 6 dígitos' }
+              ]}
             >
-              <Input  />
+              <Input 
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!/^\d*$/.test(value)) {
+                    e.target.value = value.replace(/\D/g, '');
+                  }
+                  if (e.target.value.length <= 6) {
+                    modalForm.setFieldsValue({ codigoVerificacion: e.target.value });
+                  }
+                }}
+              />
             </Form.Item>
-          </Form>
-        ),
-        okText: 'SI',
-        cancelText: 'NO',
-        onOk: async () => {
-          try {
-            const valoresModal = modalForm.getFieldsValue();
-            const codigoIngresado = valoresModal.codigoVerificacion;
-            console.log('CODIGO INGRESADO: ' + codigoIngresado)
-            console.log('CODIGO DEVUELTO API: ' + codigo)
-            if (String(codigoIngresado) === String(codigo)) {
-              console.log('ENTRO?');
-              setCorreoValidado('1');
-              notification.success({ message: 'Código correcto', description: 'El código ingresado es correcto.' });
-            } else {
-              notification.error({ message: 'Código incorrecto', description: 'El código ingresado es incorrecto.' });
+            </Form>
+          ),
+          okText: 'Verificar',
+          cancelText: 'Cancelar',
+          onOk: async () => {
+            try {
+              const valoresModal = modalForm.getFieldsValue();
+              const codigoIngresado = valoresModal.codigoVerificacion;
+              console.log('CODIGO INGRESADO: ' + codigoIngresado)
+              console.log('CODIGO DEVUELTO API: ' + codigo)
+              if(codigoIngresado != null){
+                if (String(codigoIngresado) === String(codigo)) {
+                  console.log('ENTRO?');
+                  setCorreoValidado('1');
+                  notification.success({ message: 'Código correcto', description: 'El código ingresado es correcto.' });
+                  setmodalVisible(false)
+                } else {
+                  // notification.error({ message: 'Código incorrecto', description: 'El código ingresado es incorrecto.' });
+                  modalForm.setFields([{
+                    name: 'codigoVerificacion',
+                    errors: ['El codigo ingresado es incorrecto'],
+                    }]);
+                  setmodalVisible(true);
+                  return Promise.reject();
+                }
+              }
+              else{
+                        // Si el correo no está validado
+                  modalForm.setFields([{
+                  name: 'codigoVerificacion',
+                  errors: ['Por favor ingrese el codigo'],
+                  }]);
+                  setmodalVisible(true);
+                  return Promise.reject();
+              }
+            
+            } catch (error) {
+              notification.error({ message: 'Operación no realizada', description: error.message });
             }
-          } catch (error) {
-            notification.error({ message: 'Operación no realizada', description: error.message });
-          }
-        },
-      });
+          },
+        });
+      }else{
+          // Si el correo no está validado
+          form.setFields([{
+            name: 'pena_CorreoElectronico',
+            errors: ['Por favor ingrese el correo'],
+          }]);
+      }
+    
     } catch (error) {
       notification.error({ message: 'Error al enviar correo', description: error.message });
     }
@@ -306,6 +448,7 @@ const SubCategoria = () => {
           usua_UsuarioModificacion: 1
         };
         await editarPersona(updatedSubCategoria);
+        Index();
     }
   
     setCurrentStep(currentStep + 1);
@@ -328,87 +471,111 @@ const SubCategoria = () => {
     const handleSubmit = async () => {
       try {
         const values = await form.validateFields();
+        const valoresFormulario = form.getFieldsValue();
+        const correoAlternativo = valoresFormulario.pena_CorreoAlternativo
+        console.log('CORREO ALTERNATIVO: ' + correoAlternativo);
         const date = new Date().toISOString();
         console.log("Valores del formulario:", values);
-        if (currentSubCategoria) {
-          // Editar
-          const updatedSubCategoria = {
-            ...currentSubCategoria,
-            ...values,
-
-            pena_ArchivoRTN: selectedFileName,
-            pena_ArchivoDNI: selectedFileName2,
-            pena_ArchivoNumeroRecibo: selectedFileName3,
-          //  pers_Id: Pers_Id,
-            pena_NombreArchRTN: selectedFileName, 
-          pena_NombreArchDNI: selectedFileName2,
-            pena_NombreArchRecibo: selectedFileName3,
-            pena_FechaModificacion: date,
-            usua_UsuarioModificacion: 1
-          };
-          await editar(updatedSubCategoria);
-          notification.success({ message: 'Operación realizada correctamente' });
-          handleCollapseClose();
-        } else {
-          // Nuevo
-          const newSubCategoria = {
-            ...values,
-            pena_ArchivoRTN: selectedFileName,
-            pena_ArchivoDNI: selectedFileName2,
-            pena_ArchivoNumeroRecibo: selectedFileName3,
-            pers_Id: Pers_Id,
-            pena_NombreArchRTN: selectedFileName, 
-          pena_NombreArchDNI: selectedFileName2,
-            pena_NombreArchRecibo: selectedFileName3,
-            pena_FechaCreacion: date,
-            usua_UsuarioCreacion: 1,
-            
-          };
-          const response = await insertar(newSubCategoria);
-
-          const facturaId = response.data?.data?.messageStatus;
-            // Cookies.set('facturaId', facturaId);
-            console.log('ID de la factura almacenado en la cookie:', facturaId);
-
-          Modal.confirm({
-            title: 'Advertencia!',
-            content: '¿Desea Finalizar Este Registro?',
-            okText: 'SI',
-            cancelText: 'NO',
-            okType: 'danger',
-            onOk: async () => {
-              try {
-                const deleteTalla = {
-                  pena_Id: facturaId,
-                  pena_FechaEliminacion: date,
-                    usua_UsuarioEliminacion: 1
+        if(correoValidado === '1'){
+          if(correoAlternativo != null && correoValidadoAlternativo === '1'){
+            if (currentSubCategoria) {
+              // Editar
+              const updatedSubCategoria = {
+                ...currentSubCategoria,
+                ...values,
+    
+                pena_ArchivoRTN: selectedFileName,
+                pena_ArchivoDNI: selectedFileName2,
+                pena_ArchivoNumeroRecibo: selectedFileName3,
+              //  pers_Id: Pers_Id,
+                pena_NombreArchRTN: selectedFileName, 
+              pena_NombreArchDNI: selectedFileName2,
+                pena_NombreArchRecibo: selectedFileName3,
+                pena_FechaModificacion: date,
+                usua_UsuarioModificacion: 1
               };
-
-                const response = await finalizar(deleteTalla);
-                if (response.code === 200) {
-                  notification.success({ message: 'Operacion realizada correctamente' });
-                  Index();
+              await editar(updatedSubCategoria);
+              notification.success({ message: 'Operación realizada correctamente' });
+              handleCollapseClose();
+            } else {
+              // Nuevo
+              const newSubCategoria = {
+                ...values,
+                pena_ArchivoRTN: selectedFileName,
+                pena_ArchivoDNI: selectedFileName2,
+                pena_ArchivoNumeroRecibo: selectedFileName3,
+                pers_Id: Pers_Id,
+                pena_NombreArchRTN: selectedFileName, 
+              pena_NombreArchDNI: selectedFileName2,
+                pena_NombreArchRecibo: selectedFileName3,
+                pena_FechaCreacion: date,
+                usua_UsuarioCreacion: 1,
+                
+              };
+              const response = await insertar(newSubCategoria);
+    
+              const facturaId = response.data?.data?.messageStatus;
+                // Cookies.set('facturaId', facturaId);
+                console.log('ID de la factura almacenado en la cookie:', facturaId);
+    
+              Modal.confirm({
+                title: 'Advertencia!',
+                content: '¿Desea Finalizar Este Registro?',
+                okText: 'Confirmar',
+                cancelText: 'Cancelar',
+                okType: 'danger',
+                onOk: async () => {
+                  try {
+                    const deleteTalla = {
+                      pena_Id: facturaId,
+                      pena_FechaEliminacion: date,
+                        usua_UsuarioEliminacion: 1
+                  };
+    
+                    const response = await finalizar(deleteTalla);
+                    if (response.code === 200) {
+                      notification.success({ message: 'Operacion realizada correctamente' });
+                      Index();
+                      handleCollapseClose();
+                    } else {
+                      notification.error({ message: 'Operación no realizada' });
+                    }
+                  } catch (error) {
+                    notification.error({ message: 'Operación no realizada', description: error.message });
+                  }
+                },
+                onCancel: () => {
                   handleCollapseClose();
-                } else {
-                  notification.error({ message: 'Operación no realizada' });
                 }
-              } catch (error) {
-                notification.error({ message: 'Operación no realizada', description: error.message });
-              }
-            },
-        
             
-          });
-
-          notification.success({ message: 'Operación realizada correctamente' });
+                
+              });
+    
+              notification.success({ message: 'Operación realizada correctamente' });
+            }
+    
+            const subCategorias = await get();
+            if (Array.isArray(subCategorias)) {
+              setData(subCategorias);
+              setFilteredData(subCategorias);
+            } else {
+              throw new Error('Data format is incorrect');
+            }
+          }
+         else{
+          // Si el correo no está validado
+           form.setFields([{
+          name: 'pena_CorreoAlternativo',
+          errors: ['El Correo Alternativo no esta válidado'],
+        }]);
+         }
         }
-
-        const subCategorias = await get();
-        if (Array.isArray(subCategorias)) {
-          setData(subCategorias);
-          setFilteredData(subCategorias);
-        } else {
-          throw new Error('Data format is incorrect');
+        else{
+          // Si el correo no está validado
+        form.setFields([{
+        name: 'pena_CorreoElectronico',
+        errors: ['El Correo no esta válidado'],
+      }]);
         }
         
       } catch (error) {
@@ -481,8 +648,8 @@ const SubCategoria = () => {
     Modal.confirm({
       title: 'Advertencia!',
       content: '¿Desea Finalizar Este Registro?',
-      okText: 'SI',
-      cancelText: 'NO',
+      okText: 'Confirmar',
+      cancelText: 'Cancelar',
       
       onOk: async () => {
         try {
@@ -726,9 +893,142 @@ const SubCategoria = () => {
       ),
     },
     {
-      title: 'Persona Natural',
+      title: 'Persona Natural I',
       content: (
         <><Row gutter={24}>
+          <Col span={12}>
+            <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription },
+                { len: 14, message: 'El campo debe tener 14 digitos' }
+            ]}>
+            <Input 
+                inputMode="numeric"
+                maxLength={14}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!/^\d*$/.test(value)) {
+                    e.target.value = value.replace(/\D/g, '');
+                  }
+                  if (e.target.value.length <= 14) {
+                    form.setFieldsValue({ pena_RTN: e.target.value });
+                  }
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="pena_NombreArchRTN" label="Archivo RTN" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
+              <Upload
+                showUploadList={false}
+                customRequest={handleImageUpload}
+              >
+                <Button icon={<UploadOutlined />}>{selectedFileName}</Button>
+              </Upload>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="pena_DNI" label="DNI" rules={[{ required: true, message: 'El Campo es Requerido', },   { len: 13, message: 'El campo debe tener 13 digitos' }]}>
+            <Input 
+                inputMode="numeric"
+                maxLength={13}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!/^\d*$/.test(value)) {
+                    e.target.value = value.replace(/\D/g, '');
+                  }
+                  if (e.target.value.length <= 13) {
+                    form.setFieldsValue({ pena_DNI: e.target.value });
+                  }
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="pena_NombreArchDNI" label="Archivo DNI" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
+              <Upload
+                showUploadList={false}
+                customRequest={handleImageUpload2}
+              >
+                <Button icon={<UploadOutlined />}>{selectedFileName2}</Button>
+              </Upload>
+            </Form.Item>
+          </Col>
+
+
+          <Col span={12}>
+            <Form.Item name="pena_NumeroRecibo" label="Numero Recibo" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription }]}>
+            <Input 
+                inputMode="numeric"
+         
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!/^\d*$/.test(value)) {
+                    e.target.value = value.replace(/\D/g, '');
+                  }
+                    form.setFieldsValue({ pena_NumeroRecibo: e.target.value });
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="pena_NombreArchRecibo" label="Archivo Num. Recibio" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
+              <Upload
+                showUploadList={false}
+                customRequest={handleImageUpload3}
+              >
+                <Button icon={<UploadOutlined />}>{selectedFileName3}</Button>
+              </Upload>
+            </Form.Item>
+          </Col>
+        </Row><Row gutter={24} >
+            <Col span={12}>
+              <Form.Item name="pvin_Id" label="Departamento">
+                <Select
+                  showSearch
+                  placeholder="Seleccione"
+                  optionFilterProp="children"
+                  onChange={(value) => {
+                    form.setFieldsValue({ pvin_Id: value });
+                    fetchCiudades(value);
+                  } }
+
+                  filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
+
+                >
+                  {getprovincias.map((prov) => (
+                    <Option key={prov.pvin_Id} value={prov.pvin_Id}>
+                      {prov.pvin_Nombre}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
+                <Select
+                  showSearch
+                  placeholder="Seleccione"
+                  optionFilterProp="children"
+                  onChange={(value) => form.setFieldsValue({ ciud_Id: value })}
+                  filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
+                >
+                  {ciudades.map((ciudad) => (
+                    <Option key={ciudad.ciud_Id} value={ciudad.ciud_Id}>
+                      {ciudad.ciud_Nombre}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+           
+
+          </Row></>
+      ),
+    },
+
+    {
+      title: 'Persona Natural II',
+      content: (
+        <><Row gutter={24} hidden>
           <Col span={12}>
             <Form.Item name="pena_RTN" label="RTN" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription },]}>
               <Input />
@@ -777,7 +1077,7 @@ const SubCategoria = () => {
             </Form.Item>
           </Col>
         </Row><Row gutter={24}>
-            <Col span={12}>
+            <Col span={12} hidden>
               <Form.Item name="pvin_Id" label="Departamento">
                 <Select
                   showSearch
@@ -799,7 +1099,7 @@ const SubCategoria = () => {
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={12} hidden>
               <Form.Item name="ciud_Id" label="Municipio" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
                 <Select
                   showSearch
@@ -822,8 +1122,12 @@ const SubCategoria = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="pena_TelefonoFijo" label="Telefono Fijo" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription },]}>
-                <Input defaultValue="+504 " />
+              <Form.Item name="pena_TelefonoFijo"
+               label="Telefono Fijo" 
+               rules={[{ required: true, message: 'El Campo es Requerido' }, 
+              
+               { validator: validateDescription },]}>
+                <Input defaultValue="+504 "  />
 
               </Form.Item>
             </Col>
@@ -859,7 +1163,7 @@ const SubCategoria = () => {
             </Col>
             <Col span={6}>
               <Form.Item name="" label=" ">
-                <Button type="primary">
+                <Button type="primary" onClick={enviarEmailAlternativo}>
                   Enviar Verificacion
                 </Button>
               </Form.Item>
@@ -900,7 +1204,57 @@ const SubCategoria = () => {
           <Panel header={currentSubCategoria ? (activeKey === 'details' ? 'Detalles ' : 'Editar Registro') : 'Nuevo Registro'} key={activeKey}>
             {activeKey === 'details' ? (
               <>
-                <Card title="" bordered={false}>
+                <Card title="Datos Personales" bordered={false}>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <h5>Persona RTN: </h5>
+                    </Col>
+                    <Col span={8}>
+                      <h5>Nombre Completo: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>Oficina: </h5>
+                    </Col>
+                  </Row>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.pers_RTN}</Descriptions.Item>
+                    </Col>
+                    <Col span={8}>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.pers_Nombre}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item label="ID"> {currentSubCategoria.ofic_Nombre}</Descriptions.Item>
+                    </Col>
+                  </Row>
+                  <Divider></Divider>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <h5>Oficio Profesional: </h5>
+                    </Col>
+
+                    <Col span={8}>
+                      <h5>Estado Civil: </h5>
+                    </Col>
+
+                  
+                  </Row>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.ofpr_Nombre}</Descriptions.Item>
+                    </Col>
+
+                    <Col span={8}>
+                      <Descriptions.Item label="Categoría">{currentSubCategoria.escv_Nombre}</Descriptions.Item>
+                    </Col>
+
+                  
+                  </Row>
+                </Card>
+              <Divider></Divider>
+                <Card title="Persona Natural" bordered={false}>
                   <Row gutter={24}>
                     <Col span={8}>
                       <h5>Código: </h5>
@@ -927,9 +1281,7 @@ const SubCategoria = () => {
                   </Row>
                   <Divider></Divider>
                   <Row gutter={24}>
-                    <Col span={8}>
-                      <h5>Cliente: </h5>
-                    </Col>
+                 
 
                     <Col span={8}>
                       <h5>Telefono Fijo: </h5>
@@ -938,11 +1290,12 @@ const SubCategoria = () => {
                     <Col span={8}>
                       <h5>Telefono Celular: </h5>
                     </Col>
+                    <Col span={8}>
+                      <h5>Correo Electronico: </h5>
+                    </Col>
                   </Row>
                   <Row gutter={24}>
-                    <Col span={8}>
-                      <Descriptions.Item label="Categoría">{currentSubCategoria.cliente}</Descriptions.Item>
-                    </Col>
+                    
 
                     <Col span={8}>
                       <Descriptions.Item label="Categoría">{currentSubCategoria.pena_TelefonoFijo}</Descriptions.Item>
@@ -951,11 +1304,14 @@ const SubCategoria = () => {
                     <Col span={8}>
                       <Descriptions.Item label="Categoría">{currentSubCategoria.pena_TelefonoCelular}</Descriptions.Item>
                     </Col>
+                    <Col span={8}>
+                      <Descriptions.Item >{currentSubCategoria.pena_CorreoElectronico}</Descriptions.Item>
+                    </Col>
                   </Row>
                   <Divider></Divider>
                   <Row gutter={24}>
-                    <Col span={8}>
-                      <h5>Correo Electronico: </h5>
+                  <Col span={8}>
+                      <h5>Correo Alternativo: </h5>
                     </Col>
 
                     <Col span={8}>
@@ -967,8 +1323,8 @@ const SubCategoria = () => {
                     </Col>
                   </Row>
                   <Row gutter={24}>
-                    <Col span={8}>
-                      <Descriptions.Item >{currentSubCategoria.pena_CorreoElectronico}</Descriptions.Item>
+                  <Col span={8}>
+                      <Descriptions.Item >{currentSubCategoria.pena_CorreoAlternativo}</Descriptions.Item>
                     </Col>
 
                     <Col span={8}>
@@ -995,7 +1351,7 @@ const SubCategoria = () => {
                     <Step key={item.title} title={item.title} />
                   ))}
                 </Steps>
-                <Form form={form} layout="vertical" className="ant-advanced-search-form" style={{ marginTop: 16 }}>
+                <Form form={form} layout="vertical"  style={{ marginTop: 16 }}>
                   {steps[currentStep].content}
                   <div className="steps-action">
                     {currentStep < steps.length - 1 && (
