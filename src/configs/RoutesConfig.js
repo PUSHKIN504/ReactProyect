@@ -104,7 +104,11 @@ export const protectedRoutes = [
         path: `${APP_PREFIX_PATH}/DucaCreate`,
         component: React.lazy(() => import('Tarea3/DucaCreate')),
     },
-
+    {
+        key: 'apps.tarea3.DucaEdit',
+        path: `${APP_PREFIX_PATH}/DucaEdit`,
+        component: React.lazy(() => import('Tarea3/DucaEdit')),
+    },
 
 
 
