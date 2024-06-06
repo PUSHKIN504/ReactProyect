@@ -30,6 +30,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
   const [completarItem, setCompletarItem] = useState(true);
   const [Item_Id, setItem_Id] = useState(true);
   const [ListadoItems, setListadoItems] = useState([]);
+
   const [ListadoItemsFull, setListadoItemsFull] = useState([]);
   const [isEditItem, setIsEditItem] = useState(false);
   const [getisvalid, setisvalid] = useState(false);
@@ -40,6 +41,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
     const [isEditDocumentoSoporte, setIsEditDocumentoSoporte] = useState(false);
     const [anchorElDocumentos, setAnchorElDocumentos] = useState({});
     const [tiposDocumentos, setTiposDocumentos] = useState([]);
+    const [getmarcas, setMarcas] = useState([]);
 
   const navigate = useNavigate();
   const [selectedDevIds, setSelectedDevIds] = useState([]);
@@ -49,6 +51,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
   const [form3] = Form.useForm();
   const [form4] = Form.useForm();
   const [ListadoDucas, setListadoDucas] = useState([]);
+  const [loadingFinalizarDuca, setLoadingFinalizarDuca] = useState(false);
   const [cargandoData, setCargandoData] = useState([]);
   const [activeTab, setActiveTab] = useState("1");
   const [dataDevas, setDataDevas] = useState([]);
@@ -63,6 +66,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
   const [searchTextDevas, setSearchTextDevas] = React.useState('');
   const [loadingGuardarDevas, setLoadingGuardarDevas] = React.useState(false);
   const [showTransportistaFields, setShowTransportistaFields] = useState(false);
+  const [inserto, setinserto] = useState(false);
 const [modalVisible, setModalVisible] = useState(false);
 const [dataLugarDesembarque, setdataLugarDesembarque] = useState([]);
 const [getLugarDesembarque, setLugarDesembarque] = useState([]);
@@ -278,6 +282,8 @@ const handleChangePageSize = (value) => {
         aduanas();
         setListadoItems(ListadoItemsFull.filter(item => item.item_PesoBruto === null));
         ListarItems();
+        getMarcas();
+        getTiposDocumentos();
     },[]);
 
   useEffect(() => {
@@ -1255,7 +1261,7 @@ async function EditarDocumentoSoporte(modelo2) {
 async function InsertarDocumentoSoporte(modelo9) {
   try {
       let datos = {
-          tido_Id: modelo9.CodigoTipoDocumento.value,
+          tido_Id: modelo9.CodigoTipoDocumento,
           duca_Id: getducaid,
           doso_NumeroDocumento: modelo9.NumeroDocumento,
           doso_FechaEmision: modelo9.EmisionDocumento,
@@ -1343,39 +1349,39 @@ const columnsDocumentos = [
       key: 'doso_NumeroDocumento',
       sorter: (a, b) => a.doso_NumeroDocumento.localeCompare(b.doso_NumeroDocumento),
   },
-  {
-    title: 'Acciones',
-    key: 'operationDocumentos',
-    render: (params) =>
-        <div key={params.doso_Id}>
-            <Space direction="horizontal">
-                <Button
-                    aria-controls={`menu-${params.doso_Id}`}
-                    aria-haspopup="true"
-                    onClick={(e) => handleClickDocumentos(e, params.doso_Id)}
-                    shape="round"
-                    style={{ backgroundColor: "#634A9E", color: "white" }}
-                    icon={<MoreOutlined />}
-                >
-                    Opciones
-                </Button>
-                <Menu
-                    id={`menu-${params.doso_Id}`}
-                    anchorEl={anchorElDocumentos[params.doso_Id]}
-                    open={Boolean(anchorElDocumentos[params.doso_Id])}
-                    onClose={() => handleCloseDocumentos(params.doso_Id)}
-                >
-                    <Menu.Item onClick={() => handleEditDocumentos(params)}>
-                        <EditOutlined /> Editar
-                    </Menu.Item>
-                    <Menu.Item onClick={() => handleDeleteDocumentos(params.doso_Id)}>
-                        <DeleteOutlined /> Eliminar
-                    </Menu.Item>
-                </Menu>
-            </Space>
-        </div>
-    ,
-},
+//   {
+//     title: 'Acciones',
+//     key: 'operationDocumentos',
+//     render: (params) =>
+//         <div key={params.doso_Id}>
+//              <Space direction="horizontal">
+//       <Button
+//         aria-controls={`menu-${params.doso_Id}`}
+//         aria-haspopup="true"
+//         onClick={(e) => handleClickDocumentos(e, params.doso_Id)}
+//         shape="round"
+//         style={{ backgroundColor: "#634A9E", color: "white" }}
+//         icon={<MoreOutlined />}
+//       >
+//         Opciones
+//       </Button>
+//       <Menu
+//         id={`menu-${params.doso_Id}`}
+//         anchorel={anchorElDocumentos[params.doso_Id]}
+//         open={Boolean(anchorElDocumentos[params.doso_Id])}
+//         onClose={() => handleCloseDocumentos(params.doso_Id)}
+//       >
+//         <Menu.Item key="edit" onClick={() => handleEditDocumentos(params)}>
+//           <EditOutlined /> Editar
+//         </Menu.Item>
+//         <Menu.Item key="delete" onClick={() => handleDeleteDocumentos(params.doso_Id)}>
+//           <DeleteOutlined /> Eliminar
+//         </Menu.Item>
+//       </Menu>
+//     </Space>
+//         </div>
+//     ,
+// },
 
 ];
 const { control, setValue: setValues3_DocumentosSoporte, reset: reset3_DocumentosSoporte, handleSubmit } = useForm();
@@ -1430,7 +1436,67 @@ const getDocumentosSoporteListByNoDuca = async () => {
       console.log(error);
   }
 }
+async function Marcas() {
+  try {
+    const response = await axiosInstance.get("https://localhost:44380/api/Marcas/Listar"); //copiar url despues del endpoint
+    const data = response.data.data.map((item) => {
+      return {
+        value: item.marc_Id,
+        label: item.marc_Descripcion,
+      };
+    });
+    return data;
+  } catch (error) {
+    
+  }
+}
+const getMarcas = async () => {
+  try {
+      const data = await Marcas();
+      setMarcas(data);
+  } catch (error) {
+      console.error(error);
+  }
+}
+async function tipoDocumentosDdl(){
+  try{
+      const response = await axiosInstance.get("https://localhost:44380/api/TipoDocumento/Listar");
+      const data = response.data.data.map((item) => {
+          return {
+            value: item.tido_Id,
+            label: item.tido_Codigo + item.tido_Descripcion
+          };
+      });
+      return data;
+  } catch (error){
+      console.error(error);
+  }
+}
+const getTiposDocumentos = async () => {
+  try {
+      const data = await tipoDocumentosDdl();
+      setTiposDocumentos(data);
+  } catch (error) {
+      console.error(error);
+  }
+}
+async function finalizarDuca() {
+  try {
+      const ducaId = parseInt(localStorage.getItem("duca_Id"));
+      const response = await axiosInstance.post(`https://localhost:44380/api/Duca/FinalizarDuca?duca_Id=${ducaId}`);
 
+      if (response.length>0) {
+        
+      }
+      return response;
+      
+      
+  } catch (error) {
+      console.error(error);
+  }
+}
+
+ 
   const onFinishTab3 = async (values4) => {
     console.log('Tab 3 values:', values4);
     try {
@@ -1440,7 +1506,7 @@ const getDocumentosSoporteListByNoDuca = async () => {
           // reset3_Items();
           setCompletarItem(true);
           ListarItems();
-
+          setinserto(true)
           
             setIsEditItem(false);
           
@@ -1558,14 +1624,6 @@ const getDocumentosSoporteListByNoDuca = async () => {
               </Form.Item>
             </Col>
 
-            <Col span={6}>
-              <Form.Item
-                label="duca_Id"
-                name="duca_Id"
-              >
-                <Input value={localStorage.getItem("duca_Id")}  />
-              </Form.Item >
-            </Col>
 
             <Col span={6}>
               <Form.Item
@@ -2045,11 +2103,11 @@ const getDocumentosSoporteListByNoDuca = async () => {
                     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }
                 >
-                  {/* {Marcas.map((marca) => (
+                  {getmarcas.map((marca) => (
                     <Option key={marca.value} value={marca.value}>
                       {marca.label}
                     </Option>
-                  ))} */}
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -2393,6 +2451,48 @@ const getDocumentosSoporteListByNoDuca = async () => {
     </Col>
 </Row>
 <div>
+{!collapseDocumentosSoporte && (
+  <>
+                              <Button
+                                type="primary"
+                                htmlType="submit"
+                                style={{
+                                    borderRadius: "10px",
+                                    marginRight: "10px",
+                                    marginTop: "25px",
+                                    backgroundColor: "#D1AF3C",
+                                    color: "white",
+                                }}
+                                onClick={() => {
+                                    setActiveTab("5");
+                                    
+                                }}>
+                                  Finalizar
+                                </Button>
+                                <Space direction="horizontal" style={{ justifyContent: 'space-between' }}>
+                                <Button
+                                    type="seconadry"
+                                    style={{
+                                      borderRadius: "10px",
+                                      marginRight: "10px",
+                                      marginTop: "25px",
+                                      backgroundColor: "red",
+                                      color: "white",
+                                  }}
+                                    onClick={() => navigate("/app/DucaIndex")}
+                                >
+                                    Cancelar
+                                </Button>
+
+                                
+                              </Space>
+                              </>
+                                
+)}
+</div>
+<br></br>
+
+<div>
             <Checkbox
                 defaultChecked={documentosSoporteList.length > 0}
                 onClick={() => {
@@ -2420,8 +2520,11 @@ const getDocumentosSoporteListByNoDuca = async () => {
                             >
                                 <Select placeholder="Seleccione un tipo de documento">
                                     {/* Replace with your actual options */}
-                                    <Option value="1">Tipo 1</Option>
-                                    <Option value="2">Tipo 2</Option>
+                                    {tiposDocumentos.map((Pais) => (
+                                        <Option key={Pais.value} value={Pais.value}>
+                                          {Pais.label}
+                                        </Option>
+                                      ))}
                                 </Select>
                             </Form.Item>
 
@@ -2510,6 +2613,7 @@ const getDocumentosSoporteListByNoDuca = async () => {
                             </Form.Item>
 
                             <Form.Item>
+                              <Row>
                                 <Button
                                     type="primary"
                                     htmlType="submit"
@@ -2528,6 +2632,39 @@ const getDocumentosSoporteListByNoDuca = async () => {
                                 >
                                     {isEditDocumentoSoporte ? "Editar Documento" : "Agregar Documento"}
                                 </Button>
+                                <Button
+                                type="primary"
+                                htmlType="submit"
+                                style={{
+                                    borderRadius: "10px",
+                                    marginRight: "10px",
+                                    marginTop: "25px",
+                                    backgroundColor: "green",
+                                    color: "white",
+                                }}
+                                onClick={() => {
+                                    setActiveTab("5")
+                                }}>
+                                  Finalizar
+                                </Button>
+                                <Space direction="horizontal" style={{ justifyContent: 'space-between' }}>
+                                  <Button
+                                      type="seconadry"
+                                      style={{
+                                        borderRadius: "10px",
+                                        marginRight: "10px",
+                                        marginTop: "25px",
+                                        backgroundColor: "red",
+                                        color: "white",
+                                    }}
+                                      onClick={() => navigate("/app/DucaIndex")}
+                                  >
+                                      Cancelar
+                                  </Button>
+
+                                  
+                                </Space>
+                                </Row>
                             </Form.Item>
                         </Space>
                     </Form>
@@ -2554,7 +2691,21 @@ const getDocumentosSoporteListByNoDuca = async () => {
             )}
         </div>
       </Tabs.TabPane>             
-   
+            <Tabs.TabPane tab="Finalizar Duca" key="5">
+            <Button
+                icon={<CheckOutlined />}
+                type="primary"
+                shape="round"
+                style={{ marginRight: "10px" }}
+                onClick={() => {
+                    finalizarDuca();
+                    navigate('/app/DucaIndex');
+                }}
+                loading={loadingFinalizarDuca}
+            >
+                {loadingFinalizarDuca ? "Finalizando..." : "Finalizar"}
+            </Button>
+            </Tabs.TabPane>
     </Tabs>
   );
 };
