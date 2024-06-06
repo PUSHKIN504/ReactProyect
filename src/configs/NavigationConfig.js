@@ -164,6 +164,14 @@ const appsNavTree = [{
           breadcrumb: true,
           submenu: []
         },
+        {
+          key: 'apps-tarea3-DucaEdit',
+          path: `${APP_PREFIX_PATH}/DucaEdit`,
+          title: 'sidenav.apps-tarea3-DucaEdit',
+          icon: HddFilled,
+          breadcrumb: true,
+          submenu: []
+        },
       ]
     }
 

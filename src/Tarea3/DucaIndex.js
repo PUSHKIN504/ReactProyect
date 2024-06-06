@@ -222,12 +222,6 @@ function DucaIndex() {
         }
     };
 
-    const handleClick = (event, id) => {
-        setAnchorEl((prevState) => ({
-            ...prevState,
-            [id]: event.currentTarget,
-        }));
-    };
 
     const handleClose = (id) => {
         setAnchorEl((prevState) => ({
@@ -236,36 +230,14 @@ function DucaIndex() {
         }));
     };
 
-    const handleClickExportar = (event, id) => {
-        setAnchorElExportar((prevState) => ({
-            ...prevState,
-            [id]: event.currentTarget,
-        }));
-    };
-
-    const handleCloseExportar = () => {
-        setAnchorElExportar((prevState) => ({
-            ...prevState,
-            ['menu-exportar']: null,
-        }));
-    };
-
+  
     const handleEdit = (params) => {
-        navigate("/Duca/editar", { state: params });
+        navigate("/app/DucaEdit", { state: params });
         localStorage.setItem("duca_Id", params.duca_Id);
         handleClose(params.id);
     };
 
-    const handleReporte = (id) => {
-        navigate("/Duca/Reporte", { state: { id } });
-        handleClose(id);
-    };
-
-    const handleBoletin = (params) => {
-        navigate("/BoletinDePago/crear", { state: params });
-        handleClose(params.id);
-    };
-
+    
     const handleChange = (value) => {
         setFilas(value);
     };

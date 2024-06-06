@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form,Modal, Input, DatePicker, Select, Button, Tabs, Row,Collapse, Col,Divider, Checkbox,Table,Space,Tooltip,MenuItem, Menu  } from 'antd';
 import  { useState,useEffect } from 'react';
-import { useNavigate  } from 'react-router-dom';
+import { useLocation, useNavigate  } from 'react-router-dom';
 import axios from 'axios';
 import { SearchOutlined,CheckOutlined,EditOutlined,InfoCircleOutlined,MoreOutlined ,DeleteOutlined   } from '@ant-design/icons';
 // import { useForm, Controller } from 'react-hook-form';
@@ -23,7 +23,9 @@ const { TabPane } = Tabs;
 const { Option } = Select;
 
 
-const UDP_tbDuca_InsertarTab1 = () => {
+const UDP_tbDuca_Edit = () => {
+    const location = useLocation();
+    const ducaEdit = location.state;
   const [filasItems, setFilasItems] = useState(10);
   const [searchTextItems, setSearchTextItems] = useState('');
   const [searchTextItemsCompletados, setSearchTextItemsCompletados] = useState('');
@@ -70,6 +72,7 @@ const UDP_tbDuca_InsertarTab1 = () => {
 const [modalVisible, setModalVisible] = useState(false);
 const [dataLugarDesembarque, setdataLugarDesembarque] = useState([]);
 const [getLugarDesembarque, setLugarDesembarque] = useState([]);
+const [dataDevasContieneDuca, setdataDevasContieneDuca] = useState([]);
 const [TextLugarDesembarque, setTextLugarDesembarque] = useState("");
 const [collapseConductor, setCollapseConductor] = useState(false);
 const [SearchTextLugarDesembarque, setSearchTextLugarDesembarque] = useState("");
@@ -78,6 +81,9 @@ const [loadingGuardarTab2, setLoadingGuardarTab2] = useState(false);
 const [isValid2, setIsValid2] = useState(true);
 const [datosTab2, setDatosTab2] = useState({});
 const [getducaid, setducaid] = useState({});
+const [Aduanas, setAduana] = useState({});
+const [paisdestino, setPaisesDestino] = useState({});
+const [collapseDocumentosSoport, setCollapseDocumentosSoport] = useState(false);
 async function ModosTransporte() {
   try {
     const response = await axiosInstance.get("https://localhost:44380/api/ModoTransporte/Listar"); //copiar url despues del endpoint
@@ -286,11 +292,88 @@ const handleChangePageSize = (value) => {
         getTiposDocumentos();
     },[]);
 
+    useEffect(() => {
+        if (ListadoItemsFull.length > 0) {
+            setListadoItems(ListadoItemsFull.filter(item => item.item_PesoBruto === null));
+            setListadoItemsCompletados(ListadoItemsFull.filter(item => item.item_PesoBruto !== null));
+        }
+
+        if (documentosSoporteList.length > 0) {
+            setCollapseDocumentosSoport(true);
+        }
+
+
+        if (ducaEdit != null) {
+            if (ducaEdit.duca_No_Correlativo_Referencia != null) {
+                setValues1("NoDuca", ducaEdit.duca_No_Duca, { shouldValidate: true, shouldTouch: true });
+                setValues1("NoCorrelativoReferencia", ducaEdit.duca_No_Correlativo_Referencia, { shouldValidate: true, shouldTouch: true });
+                // setValues1("AduanaRegistro", Aduanas.find(item => item.value == ducaEdit.duca_AduanaRegistro), { shouldValidate: true, shouldTouch: true });
+                // setValues1("AduanaDestino", Aduanas.find(item => item.value == ducaEdit.duca_AduanaDestino), { shouldValidate: true, shouldTouch: true });
+
+                if (RegimenesAduaneros.length > 0) {
+                    setRegimenesAduaneros([RegimenesAduaneros.find(item => item.value === ducaEdit.duca_Regimen_Aduanero)]);
+                    setValues1("RegimenAduanero", RegimenesAduaneros.find(item => item.value === ducaEdit.duca_Regimen_Aduanero));
+                }
+
+                setValues1("Modalidad", ducaEdit.duca_Modalidad);
+                setValues1("Clase", ducaEdit.duca_Clase);
+                setValues1("FechaVencimiento", ducaEdit.duca_FechaVencimiento, { shouldValidate: true, shouldTouch: true });
+
+                if (Paises.length > 0) {
+                    setPaisesProcedencia(Paises.filter(item => item.value != 97));
+                    setValues1("PaisProcedencia", Paises.find(item => item.value == ducaEdit.duca_Pais_Procedencia), { shouldValidate: true, shouldTouch: true });
+
+                    setPaisesDestino(Paises.filter(item => item.value === 97));
+                    setValues1("PaisDestino", Paises.find(item => item.value == ducaEdit.duca_Pais_Destino), { shouldValidate: true, shouldTouch: true });
+                }
+
+                setValues1("DepositoAduanero", ducaEdit.duca_Deposito_Aduanero, { shouldValidate: true, shouldTouch: true });
+                setValues1("Manifiesto", ducaEdit.duca_Manifiesto, { shouldValidate: true, shouldTouch: true });
+                setValues1("Titulo", ducaEdit.duca_Titulo, { shouldValidate: true, shouldTouch: true });
+            }
+
+            if (ducaEdit.duca_Codigo_Declarante != null && ducaEdit.duca_Codigo_Declarante != "" && ducaEdit.duca_Codigo_Declarante != undefined) {
+                setValues2("Codigo_Declarante", ducaEdit.duca_Codigo_Declarante, { shouldValidate: true, shouldTouch: true });
+                setValues2("NoIdentificacion_Declarante", ducaEdit.duca_Numero_Id_Declarante, { shouldValidate: true, shouldTouch: true });
+                setValues2("NombreRazonSocial_Declarante", ducaEdit.duca_NombreSocial_Declarante, { shouldValidate: true, shouldTouch: true });
+                setValues2("DomicilioFiscal_Declarante", ducaEdit.duca_DomicilioFiscal_Declarante, { shouldValidate: true, shouldTouch: true });
+                setValues2("Codigo", ducaEdit.duca_Codigo_Transportista, { shouldValidate: true, shouldTouch: true });
+                setValues2("Nombre", ducaEdit.duca_Transportista_Nombre, { shouldValidate: true, shouldTouch: true });
+                // setValues2("ModoTransporte", ModosTransporte.find(item => item.value == ducaEdit.motr_Id), { shouldValidate: true, shouldTouch: true });
+            }
+
+            if (ducaEdit.duca_Conductor_Id != null && ducaEdit.duca_Conductor_Id != 0 && ducaEdit.duca_Conductor_Id != undefined) {
+                setValues2("duca_Conductor_Id", ducaEdit.duca_Conductor_Id);
+                setValues2("NoIdentificador", ducaEdit.cont_NoIdentificacion, { shouldValidate: true, shouldTouch: true });
+                setValues2("NoLicenciaConducir", ducaEdit.cont_Licencia, { shouldValidate: true, shouldTouch: true });
+                setValues2("PaisExpedicion", Paises.find(item => item.value == ducaEdit.pais_IdExpedicion), { shouldValidate: true, shouldTouch: true });
+                setValues2("Nombres", ducaEdit.cont_Nombre, { shouldValidate: true, shouldTouch: true });
+                setValues2("Apellidos", ducaEdit.cont_Apellido, { shouldValidate: true, shouldTouch: true });
+                setValues2("IdUnidadTransporte", ducaEdit.tran_IdUnidadTransporte, { shouldValidate: true, shouldTouch: true });
+                setValues2("PaisRegistro", Paises.find(item => item.value == ducaEdit.id_pais_transporte), { shouldValidate: true, shouldTouch: true });
+                setValues2("Marca", Marcas.find(item => item.value == ducaEdit.transporte_marca_Id), { shouldValidate: true, shouldTouch: true });
+                // setValues2("ChasisVin", ducaEdit.tran_Chasis), { shouldValidate: true, shouldTouch: true };
+                setValues2("IdentificacionRemolque", ducaEdit.tran_Remolque, { shouldValidate: true, shouldTouch: true });
+                setValues2("CantidadUnidadesCarga", ducaEdit.tran_CantCarga, { shouldValidate: true, shouldTouch: true });
+                setValues2("NumeroDispositivo", ducaEdit.tran_NumDispositivoSeguridad, { shouldValidate: true, shouldTouch: true });
+                setValues2("Equipamiento", ducaEdit.tran_Equipamiento, { shouldValidate: true, shouldTouch: true });
+                setValues2("TamanioEquipamiento", ducaEdit.tran_TamanioEquipamiento, { shouldValidate: true, shouldTouch: true });
+                setValues2("TipoCarga", ducaEdit.tran_TipoCarga, { shouldValidate: true, shouldTouch: true });
+                setValues2("NIdentificacionContenedor", ducaEdit.tran_IdContenedor, { shouldValidate: true, shouldTouch: true });
+                setCollapseConductor(true);
+            }
+
+            if (ducaEdit.emba_Codigo != null && ducaEdit.emba_Codigo != "" && ducaEdit.emba_Codigo != undefined) {
+                CargarDatosLugarDesembarque(ducaEdit.emba_Codigo.substring(0, 2));
+            }
+        }
+    }, [Aduanas, ModosTransporte, Marcas, ListadoItemsFull, documentosSoporteList])
   useEffect(() => {
     if (Paises.length>0) {
         setPaisesProcedencia([Paises.find(item=>item.value===97)]);
         setValues1("PaisDestino", Paises.find(item=>item.value===97));
     }
+    
     
     // CargarDatospaises();    
     getListadoDucas();
@@ -321,6 +404,77 @@ const handleChangePageSize = (value) => {
             };
         });
         return data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+async function ListarDevasxNoDuca() {
+    try {
+        const response = await axiosInstance.get(`https://localhost:44380/api/ItemsDEVAxDUCA/ListadoDevasPorducaId?duca_Id=${parseInt(localStorage.getItem("duca_Id") )}` );
+
+        let devas = [];
+
+        response.data.data.forEach(element => {
+            devas.push(element.deva_Id);
+        });
+
+        return devas;
+    } catch (error) {
+        console.error(error);
+    }
+}
+async function ListarDevasPorDuca() {
+    try {
+        const response = await axiosInstance.get(`${API_URL}ListaDevaNoDuca`);
+        const data = response.data.data.map((item, index) => {
+            return {
+                key: index + 1,
+                deva_Id: item.deva_Id,
+                pais_ExportacionId: item.pais_ExportacionId,
+                pais_Codigo: item.pais_Codigo,
+                pais_Nombre: item.pais_Codigo + item.pais_Nombre,
+                inco_Id: item.inco_Id,
+                inco_Codigo: item.inco_Codigo,
+                regi_Id: item.regi_Id,
+                regi_Codigo: item.regi_Codigo,
+                regi_Descripcion: item.regi_Descripcion,
+                deva_FechaAceptacion: item.deva_FechaAceptacion,
+                deva_ConversionDolares: item.deva_ConversionDolares
+            };
+        });
+        return data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+const getListadoDucast = async () => {
+    try {
+        const data = await ListadoDuca();
+        setListadoDucas(data);
+
+        const dataDevasDisponibles = await ListarDevasPorDuca();
+
+        const dataDevasContieneDuca = await ListarDevasxNoDuca();
+
+        const dataDevasFull = [];
+
+        if (dataDevasDisponibles.length > 0) {
+            dataDevasDisponibles.forEach(item => {
+                dataDevasFull.push(item);
+            });
+        }
+
+        if (dataDevasContieneDuca.length > 0) {
+            setdataDevasContieneDuca(dataDevasContieneDuca);
+            let devsIds = [];
+            dataDevasContieneDuca.forEach(item => {
+                dataDevasFull.push(item);
+                devsIds.push(item.deva_Id);
+            });
+            setidsDevasContieneDuca(devsIds);
+            setSelectedDevIds(devsIds);
+        }
+        setDataDevas(dataDevasFull);
     } catch (error) {
         console.error(error);
     }
@@ -2710,4 +2864,4 @@ async function finalizarDuca() {
   );
 };
 
-export default UDP_tbDuca_InsertarTab1;
+export default UDP_tbDuca_Edit;
