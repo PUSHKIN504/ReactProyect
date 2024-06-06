@@ -4,34 +4,20 @@ import { SearchOutlined, PlusCircleFilled,CheckSquareFilled, EditFilled, EyeFill
 import { DeleteFilled } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import utils from 'utils';
-import { get, insertar,insertarPersona, editar, getPerson, getCiudades,getEsCiv,getOficinas,getOficios, getCiudadesPorProvincia,getProvincias, finalizar } from 'services/PersonaNaturalService';
+import { get, insertar,insertarPersona,validarCorreo, editar, getPerson, getCiudades,getEsCiv,getOficinas,getOficios, getCiudadesPorProvincia,getProvincias, finalizar, editarPersona } from 'services/PersonaNaturalService';
 import { Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import Fixed from 'views/app-views/components/layout/layout/Fixed';
-
+import { Resend } from 'resend';
 const { Search } = Input;
 const { Panel } = Collapse;
 const { Option } = Select;
 const { Step } = Steps;
+ const resend = new Resend('re_WzSGr6CP_FHqwCroa9NYdJZ43NGYqoruy');
 
 const { TextArea } = Input;
 
-function onChange(value) {
-  console.log(`selected ${value}`);
-}
-
-function onBlur() {
-  console.log('blur');
-}
-
-function onFocus() {
-  console.log('focus');
-}
-
-function onSearch(val) {
-  console.log('search:', val);
-}
 
 
 const SubCategoria = () => {
@@ -42,6 +28,7 @@ const SubCategoria = () => {
   const [activeKey, setActiveKey] = useState(null);
   const [showTable, setShowTable] = useState(true);
   const [form] = Form.useForm();
+  const [formCorreoElectronico] = Form.useForm();
   const [currentSubCategoria, setCurrentSubCategoria] = useState(null);
   const [getPersonas, setPerson] = useState([]);
   const [oficios, setOficios] = useState([]);
@@ -56,9 +43,9 @@ const SubCategoria = () => {
   const [PersonaIngresada, setPersonaIngresada] = useState('0');
   const [Pers_Id, setPers_Id] = useState('0');
   const [ciudades, setCiudades] = useState([]);
-const [defaultCiudadId, setdefaultCiudadId] = useState('0');
-const [selectedCiudad, setSelectedCiudad] = useState(null
-);
+  const [correoValidado, setCorreoValidado] = React.useState('0');
+  const [modalForm] = Form.useForm();
+
     useEffect(() => {
     const fetchData = async () => {
       try {
@@ -225,7 +212,12 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
     
     setShowTable(false);
     if (subCategoria) {
-      form.setFieldsValue(subCategoria); 
+      form.setFieldsValue(subCategoria);
+      console.log('PROBANDO: ' + subCategoria.pena_ArchivoDNI)
+      setSelectedFileName(subCategoria.pena_ArchivoRTN);
+      setSelectedFileName2(subCategoria.pena_ArchivoDNI);
+     setSelectedFileName3(subCategoria.pena_ArchivoNumeroRecibo);
+      setPersonaIngresada('2') 
     } else {
       form.resetFields();
       setSelectedFileName('Seleccione');
@@ -235,6 +227,55 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
      setPers_Id('0');
     }
   };
+
+
+  const enviarEmail = async () => {
+    try {
+      modalForm.resetFields();
+      const correoElectronico = form.getFieldValue('pena_CorreoElectronico');
+      const response = await validarCorreo(correoElectronico);
+      const codigo = response.data;
+      console.log('CODIGO VERIFICACION: ' + codigo);
+      
+
+      Modal.confirm({
+        title: 'Ingrese el código',
+        content: (
+          <Form form={modalForm}>
+            <Form.Item
+              name="codigoVerificacion"
+              rules={[{ required: true, message: 'Por favor ingrese el código de verificación' }]}
+            >
+              <Input  />
+            </Form.Item>
+          </Form>
+        ),
+        okText: 'SI',
+        cancelText: 'NO',
+        onOk: async () => {
+          try {
+            const valoresModal = modalForm.getFieldsValue();
+            const codigoIngresado = valoresModal.codigoVerificacion;
+            console.log('CODIGO INGRESADO: ' + codigoIngresado)
+            console.log('CODIGO DEVUELTO API: ' + codigo)
+            if (String(codigoIngresado) === String(codigo)) {
+              console.log('ENTRO?');
+              setCorreoValidado('1');
+              notification.success({ message: 'Código correcto', description: 'El código ingresado es correcto.' });
+            } else {
+              notification.error({ message: 'Código incorrecto', description: 'El código ingresado es incorrecto.' });
+            }
+          } catch (error) {
+            notification.error({ message: 'Operación no realizada', description: error.message });
+          }
+        },
+      });
+    } catch (error) {
+      notification.error({ message: 'Error al enviar correo', description: error.message });
+    }
+  };
+
+
   const next = async () => {
     const values = await form.validateFields();
     const date = new Date().toISOString();
@@ -247,12 +288,24 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
         pers_OfprRepresentante: 1,
         pers_FechaCreacion: date,
         usua_UsuarioCreacion: 1,
-        
       };
       const response = await insertarPersona(newSubCategoria);
       const Id = response.data?.data?.messageStatus;
       setPers_Id(Id)
      
+    }
+    if(PersonaIngresada === '2'){
+     
+        // Editar
+        const updatedSubCategoria = {
+          ...currentSubCategoria,
+          ...values,
+          pers_escvRepresentante: 1,
+          pers_OfprRepresentante: 1,
+          pers_FechaModificacion: date,
+          usua_UsuarioModificacion: 1
+        };
+        await editarPersona(updatedSubCategoria);
     }
   
     setCurrentStep(currentStep + 1);
@@ -272,88 +325,96 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
 
   
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const date = new Date().toISOString();
-      console.log("Valores del formulario:", values);
-      if (currentSubCategoria) {
-        // Editar
-        const updatedSubCategoria = {
-          ...currentSubCategoria,
-          ...values,
-          pena_FechaModificacion: date,
-          usua_UsuarioModificacion: 1
-        };
-        await editar(updatedSubCategoria);
-        notification.success({ message: 'Operación realizada correctamente' });
-        handleCollapseClose();
-      } else {
-        // Nuevo
-        const newSubCategoria = {
-          ...values,
-           pena_ArchivoRTN: selectedFileName,
-           pena_ArchivoDNI: selectedFileName2,
-           pena_ArchivoNumeroRecibo: selectedFileName3,
-          pers_Id: Pers_Id,
-           pena_NombreArchRTN: selectedFileName, 
-         pena_NombreArchDNI: selectedFileName2,
-           pena_NombreArchRecibo: selectedFileName3,
-          pena_FechaCreacion: date,
-          usua_UsuarioCreacion: 1,
-          
-        };
-        const response = await insertar(newSubCategoria);
+    const handleSubmit = async () => {
+      try {
+        const values = await form.validateFields();
+        const date = new Date().toISOString();
+        console.log("Valores del formulario:", values);
+        if (currentSubCategoria) {
+          // Editar
+          const updatedSubCategoria = {
+            ...currentSubCategoria,
+            ...values,
 
-        const facturaId = response.data?.data?.messageStatus;
-          // Cookies.set('facturaId', facturaId);
-          console.log('ID de la factura almacenado en la cookie:', facturaId);
+            pena_ArchivoRTN: selectedFileName,
+            pena_ArchivoDNI: selectedFileName2,
+            pena_ArchivoNumeroRecibo: selectedFileName3,
+          //  pers_Id: Pers_Id,
+            pena_NombreArchRTN: selectedFileName, 
+          pena_NombreArchDNI: selectedFileName2,
+            pena_NombreArchRecibo: selectedFileName3,
+            pena_FechaModificacion: date,
+            usua_UsuarioModificacion: 1
+          };
+          await editar(updatedSubCategoria);
+          notification.success({ message: 'Operación realizada correctamente' });
+          handleCollapseClose();
+        } else {
+          // Nuevo
+          const newSubCategoria = {
+            ...values,
+            pena_ArchivoRTN: selectedFileName,
+            pena_ArchivoDNI: selectedFileName2,
+            pena_ArchivoNumeroRecibo: selectedFileName3,
+            pers_Id: Pers_Id,
+            pena_NombreArchRTN: selectedFileName, 
+          pena_NombreArchDNI: selectedFileName2,
+            pena_NombreArchRecibo: selectedFileName3,
+            pena_FechaCreacion: date,
+            usua_UsuarioCreacion: 1,
+            
+          };
+          const response = await insertar(newSubCategoria);
 
-        Modal.confirm({
-          title: 'Advertencia!',
-          content: '¿Desea Finalizar Este Registro?',
-          okText: 'SI',
-          cancelText: 'NO',
-          okType: 'danger',
-          onOk: async () => {
-            try {
-              const deleteTalla = {
-                pena_Id: facturaId,
-                pena_FechaEliminacion: date,
-                  usua_UsuarioEliminacion: 1
-            };
+          const facturaId = response.data?.data?.messageStatus;
+            // Cookies.set('facturaId', facturaId);
+            console.log('ID de la factura almacenado en la cookie:', facturaId);
 
-              const response = await finalizar(deleteTalla);
-              if (response.code === 200) {
-                notification.success({ message: 'Operacion realizada correctamente' });
-                Index();
-                handleCollapseClose();
-              } else {
-                notification.error({ message: 'Operación no realizada' });
+          Modal.confirm({
+            title: 'Advertencia!',
+            content: '¿Desea Finalizar Este Registro?',
+            okText: 'SI',
+            cancelText: 'NO',
+            okType: 'danger',
+            onOk: async () => {
+              try {
+                const deleteTalla = {
+                  pena_Id: facturaId,
+                  pena_FechaEliminacion: date,
+                    usua_UsuarioEliminacion: 1
+              };
+
+                const response = await finalizar(deleteTalla);
+                if (response.code === 200) {
+                  notification.success({ message: 'Operacion realizada correctamente' });
+                  Index();
+                  handleCollapseClose();
+                } else {
+                  notification.error({ message: 'Operación no realizada' });
+                }
+              } catch (error) {
+                notification.error({ message: 'Operación no realizada', description: error.message });
               }
-            } catch (error) {
-              notification.error({ message: 'Operación no realizada', description: error.message });
-            }
-          },
-      
-          
-        });
+            },
+        
+            
+          });
 
-        notification.success({ message: 'Operación realizada correctamente' });
-      }
+          notification.success({ message: 'Operación realizada correctamente' });
+        }
 
-      const subCategorias = await get();
-      if (Array.isArray(subCategorias)) {
-        setData(subCategorias);
-        setFilteredData(subCategorias);
-      } else {
-        throw new Error('Data format is incorrect');
+        const subCategorias = await get();
+        if (Array.isArray(subCategorias)) {
+          setData(subCategorias);
+          setFilteredData(subCategorias);
+        } else {
+          throw new Error('Data format is incorrect');
+        }
+        
+      } catch (error) {
+        notification.error({ message: 'Operación no realizada', description: error.message });
       }
-      
-    } catch (error) {
-      notification.error({ message: 'Operación no realizada', description: error.message });
-    }
-  };
+    };
 
   const validateDescription = (_, value) => {
     if (value && value.trim() === '') {
@@ -595,29 +656,28 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
     {
       title: 'Datos Personales',
       content: (
-        <Row gutter={24}>
+        <><br></br><Row gutter={24}>
+
           <Col span={12}>
-            <Form.Item name="pers_RTN" label="Persona RTN" rules={[{ required: true, message: 'El Campo Es Requerido' }]}>
-            <Input />
+            <Form.Item name="pers_RTN" label="Persona RTN" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription },]}>
+              <Input />
             </Form.Item>
           </Col>
 
           <Col span={12}>
-            <Form.Item name="pers_Nombre" label="Nombre Completo" rules={[{ required: true, message: 'El Campo Es Requerido' }]}>
-            <Input />
+            <Form.Item name="pers_Nombre" label="Nombre Completo" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription },]}>
+              <Input />
             </Form.Item>
           </Col>
 
           <Col span={12}>
-            <Form.Item name="ofic_Id" label="Oficina" rules={[{ required: true, message: 'El Campo Es Requerido' }]}>
+            <Form.Item name="ofic_Id" label="Oficina" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
               <Select
                 showSearch
                 placeholder="Seleccione"
                 optionFilterProp="children"
                 onChange={(value) => form.setFieldsValue({ ofic_Id: value })}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
+                filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
               >
                 {oficinas.map((oficinas) => (
                   <Option key={oficinas.ofic_Id} value={oficinas.ofic_Id}>
@@ -628,15 +688,13 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="ofpr_Id" label="Oficio Profesional" rules={[{ required: true, message: 'El Campo Es Requerido' }]}>
+            <Form.Item name="ofpr_Id" label="Oficio Profesional" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
               <Select
                 showSearch
                 placeholder="Seleccione"
                 optionFilterProp="children"
                 onChange={(value) => form.setFieldsValue({ ofpr_Id: value })}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
+                filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
               >
                 {oficios.map((oficios) => (
                   <Option key={oficios.ofpr_Id} value={oficios.ofpr_Id}>
@@ -647,15 +705,13 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="escv_Id" label="Estado Civil" rules={[{ required: true, message: 'El Campo Es Requerido' }]}>
+            <Form.Item name="escv_Id" label="Estado Civil" rules={[{ required: true, message: 'El Campo es Requerido' }]}>
               <Select
                 showSearch
                 placeholder="Seleccione"
                 optionFilterProp="children"
                 onChange={(value) => form.setFieldsValue({ escv_Id: value })}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
+                filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
               >
                 {Esciv.map((esciv) => (
                   <Option key={esciv.escv_Id} value={esciv.escv_Id}>
@@ -665,7 +721,7 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
               </Select>
             </Form.Item>
           </Col>
-        </Row>
+        </Row></>
      
       ),
     },
@@ -786,7 +842,7 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
             </Col>
             <Col span={6}>
               <Form.Item name="" label=" ">
-                <Button type="primary">
+                <Button type="primary" onClick={enviarEmail}>
                   Enviar Verificacion
                 </Button>
               </Form.Item>
@@ -951,14 +1007,14 @@ const [selectedCiudad, setSelectedCiudad] = useState(null
                       <Button type="primary" onClick={handleSubmit}>
                         Guardar
                       </Button>
-                    )}
+                    )}  
                     {currentStep > 0 && (
-                      <Button style={{ marginLeft: 8 }} onClick={() => prev()}>
+                      <Button  type="primary" style={{ marginLeft: 8, backgroundColor: 'darkgray' }} onClick={() => prev()}>
                         Anterior
                       </Button>
                     )}
                     <Button icon={<CaretLeftFilled />} type="primary" onClick={handleCollapseClose} style={{ marginLeft: 8 }} danger>
-                      Volver
+                      Cancelar
                     </Button>
                   </div>
                 </Form>

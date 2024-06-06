@@ -112,6 +112,25 @@ export const insertar = async (subcategoria) => {
   }
 };
 
+export const validarCorreo = async (correo_usuario) => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/EnviarCorreo/${correo_usuario}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (response.data) {
+      return { success: true, data: response.data }; 
+    } else {
+      throw new Error('Error');
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+
+
 
 export const insertarPersona = async (subcategoria) => {
   try {
@@ -127,6 +146,19 @@ export const insertarPersona = async (subcategoria) => {
         throw new Error('Error');
       }
     // return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const editarPersona = async (subcategoria) => {
+  try {
+    const response = await axiosInstance.post('https://localhost:44380/api/Personas/Editar', subcategoria, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    return response.data;
   } catch (error) {
     throw error;
   }
