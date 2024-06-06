@@ -437,7 +437,7 @@ const SubCategoria = () => {
      
     }
     if(PersonaIngresada === '2'){
-     
+     setPersonaIngresada('3')
         // Editar
         const updatedSubCategoria = {
           ...currentSubCategoria,
@@ -460,6 +460,7 @@ const SubCategoria = () => {
     setCurrentStep(currentStep - 1);
   };
   const handleCollapseClose = () => {
+    Index();
     setActiveKey(null);
     setCurrentSubCategoria(null);
     setShowTable(true);
@@ -468,121 +469,124 @@ const SubCategoria = () => {
 
   
 
-    const handleSubmit = async () => {
-      try {
-        const values = await form.validateFields();
-        const valoresFormulario = form.getFieldsValue();
-        const correoAlternativo = valoresFormulario.pena_CorreoAlternativo
-        console.log('CORREO ALTERNATIVO: ' + correoAlternativo);
-        const date = new Date().toISOString();
-        console.log("Valores del formulario:", values);
-        if(correoValidado === '1'){
-          if(correoAlternativo != null && correoValidadoAlternativo === '1'){
-            if (currentSubCategoria) {
-              // Editar
-              const updatedSubCategoria = {
-                ...currentSubCategoria,
-                ...values,
-    
-                pena_ArchivoRTN: selectedFileName,
-                pena_ArchivoDNI: selectedFileName2,
-                pena_ArchivoNumeroRecibo: selectedFileName3,
-              //  pers_Id: Pers_Id,
-                pena_NombreArchRTN: selectedFileName, 
-              pena_NombreArchDNI: selectedFileName2,
-                pena_NombreArchRecibo: selectedFileName3,
-                pena_FechaModificacion: date,
-                usua_UsuarioModificacion: 1
-              };
-              await editar(updatedSubCategoria);
-              notification.success({ message: 'Operación realizada correctamente' });
-              handleCollapseClose();
-            } else {
-              // Nuevo
-              const newSubCategoria = {
-                ...values,
-                pena_ArchivoRTN: selectedFileName,
-                pena_ArchivoDNI: selectedFileName2,
-                pena_ArchivoNumeroRecibo: selectedFileName3,
-                pers_Id: Pers_Id,
-                pena_NombreArchRTN: selectedFileName, 
-              pena_NombreArchDNI: selectedFileName2,
-                pena_NombreArchRecibo: selectedFileName3,
-                pena_FechaCreacion: date,
-                usua_UsuarioCreacion: 1,
-                
-              };
-              const response = await insertar(newSubCategoria);
-    
-              const facturaId = response.data?.data?.messageStatus;
-                // Cookies.set('facturaId', facturaId);
-                console.log('ID de la factura almacenado en la cookie:', facturaId);
-    
-              Modal.confirm({
-                title: 'Advertencia!',
-                content: '¿Desea Finalizar Este Registro?',
-                okText: 'Confirmar',
-                cancelText: 'Cancelar',
-                okType: 'danger',
-                onOk: async () => {
-                  try {
-                    const deleteTalla = {
-                      pena_Id: facturaId,
-                      pena_FechaEliminacion: date,
-                        usua_UsuarioEliminacion: 1
-                  };
-    
-                    const response = await finalizar(deleteTalla);
-                    if (response.code === 200) {
-                      notification.success({ message: 'Operacion realizada correctamente' });
-                      Index();
-                      handleCollapseClose();
-                    } else {
-                      notification.error({ message: 'Operación no realizada' });
-                    }
-                  } catch (error) {
-                    notification.error({ message: 'Operación no realizada', description: error.message });
-                  }
-                },
-                onCancel: () => {
-                  handleCollapseClose();
-                }
-            
-                
-              });
-    
-              notification.success({ message: 'Operación realizada correctamente' });
-            }
-    
-            const subCategorias = await get();
-            if (Array.isArray(subCategorias)) {
-              setData(subCategorias);
-              setFilteredData(subCategorias);
-            } else {
-              throw new Error('Data format is incorrect');
-            }
-          }
-         else{
-          // Si el correo no está validado
-           form.setFields([{
-          name: 'pena_CorreoAlternativo',
-          errors: ['El Correo Alternativo no esta válidado'],
-        }]);
-         }
-        }
-        else{
-          // Si el correo no está validado
-        form.setFields([{
-        name: 'pena_CorreoElectronico',
-        errors: ['El Correo no esta válidado'],
-      }]);
-        }
-        
-      } catch (error) {
-        notification.error({ message: 'Operación no realizada', description: error.message });
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const valoresFormulario = form.getFieldsValue();
+      const correoAlternativo = valoresFormulario.pena_CorreoAlternativo || ''; // Manejar undefined
+      console.log('CORREO ALTERNATIVO: ' + correoAlternativo);
+  
+      const date = new Date().toISOString();
+      console.log("Valores del formulario:", values);
+  
+      // Verificar si correoAlternativo está vacío o no
+      if (correoAlternativo === '') {
+        console.log('VACIO');
+        setCorreoValidadoAlternativo('0');
+      } else {
+        console.log('LLENO');
+        setCorreoValidadoAlternativo('1');
       }
-    };
-
+  
+      // Lógica para el correo principal
+      if (correoValidado === '1') {
+        // Si correoAlternativo está vacío o está validado
+        if (correoAlternativo === '' || correoValidadoAlternativo === '1') {
+          if (currentSubCategoria) {
+            // Editar
+            const updatedSubCategoria = {
+              ...currentSubCategoria,
+              ...values,
+              pena_ArchivoRTN: selectedFileName,
+              pena_ArchivoDNI: selectedFileName2,
+              pena_ArchivoNumeroRecibo: selectedFileName3,
+              pena_NombreArchRTN: selectedFileName,
+              pena_NombreArchDNI: selectedFileName2,
+              pena_NombreArchRecibo: selectedFileName3,
+              pena_FechaModificacion: date,
+              usua_UsuarioModificacion: 1
+            };
+            await editar(updatedSubCategoria);
+            notification.success({ message: 'Operación realizada correctamente' });
+            handleCollapseClose();
+          } else {
+            // Nuevo
+            const newSubCategoria = {
+              ...values,
+              pena_ArchivoRTN: selectedFileName,
+              pena_ArchivoDNI: selectedFileName2,
+              pena_ArchivoNumeroRecibo: selectedFileName3,
+              pers_Id: Pers_Id,
+              pena_NombreArchRTN: selectedFileName,
+              pena_NombreArchDNI: selectedFileName2,
+              pena_NombreArchRecibo: selectedFileName3,
+              pena_FechaCreacion: date,
+              usua_UsuarioCreacion: 1,
+            };
+            const response = await insertar(newSubCategoria);
+  
+            const facturaId = response.data?.data?.messageStatus;
+            console.log('ID de la factura almacenado en la cookie:', facturaId);
+  
+            Modal.confirm({
+              title: 'Advertencia!',
+              content: '¿Desea Finalizar Este Registro?',
+              okText: 'Confirmar',
+              cancelText: 'Cancelar',
+        
+              onOk: async () => {
+                try {
+                  const deleteTalla = {
+                    pena_Id: facturaId,
+                    pena_FechaEliminacion: date,
+                    usua_UsuarioEliminacion: 1
+                  };
+  
+                  const response = await finalizar(deleteTalla);
+                  if (response.code === 200) {
+                    notification.success({ message: 'Operación realizada correctamente' });
+                    Index();
+                    handleCollapseClose();
+                  } else {
+                    notification.error({ message: 'Operación no realizada' });
+                  }
+                } catch (error) {
+                  notification.error({ message: 'Operación no realizada', description: error.message });
+                }
+              },
+              onCancel: () => {
+                handleCollapseClose();
+              }
+            });
+  
+            notification.success({ message: 'Operación realizada correctamente' });
+          }
+  
+          const subCategorias = await get();
+          if (Array.isArray(subCategorias)) {
+            setData(subCategorias);
+            setFilteredData(subCategorias);
+          } else {
+            throw new Error('Data format is incorrect');
+          }
+        } else {
+          // Si el correo alternativo no está validado
+          form.setFields([{
+            name: 'pena_CorreoAlternativo',
+            errors: ['El Correo Alternativo no está validado'],
+          }]);
+        }
+      } else {
+        // Si el correo principal no está validado
+        form.setFields([{
+          name: 'pena_CorreoElectronico',
+          errors: ['El Correo no está validado'],
+        }]);
+      }
+    } catch (error) {
+      notification.error({ message: 'Operación no realizada', description: error.message });
+    }
+  };
   const validateDescription = (_, value) => {
     if (value && value.trim() === '') {
       return Promise.reject(new Error('El Campo es Requerido'));
@@ -826,8 +830,20 @@ const SubCategoria = () => {
         <><br></br><Row gutter={24}>
 
           <Col span={12}>
-            <Form.Item name="pers_RTN" label="Persona RTN" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription },]}>
-              <Input />
+            <Form.Item name="pers_RTN" label="Persona RTN" rules={[{ required: true, message: 'El Campo es Requerido' }, { validator: validateDescription }, { len: 14, message: 'El campo debe tener 14 digitos' }]}>
+            <Input 
+                inputMode="numeric"
+                maxLength={14}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!/^\d*$/.test(value)) {
+                    e.target.value = value.replace(/\D/g, '');
+                  }
+                  if (e.target.value.length <= 14) {
+                    form.setFieldsValue({ pers_RTN: e.target.value });
+                  }
+                }}
+              />
             </Form.Item>
           </Col>
 
